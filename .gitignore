@@ -1,0 +1,75 @@
+# ─────────────────────────────────────────────────────────────
+# SWARA Root .gitignore
+# ─────────────────────────────────────────────────────────────
+
+# ── SECRETS — NEVER COMMIT ───────────────────────────────────
+.env
+.env.*
+!.env.example
+.env.local
+
+# ── DATABASE — KEEP LOCAL ONLY ───────────────────────────────
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+backend/*.db
+backend/*.db-shm
+backend/*.db-wal
+backend/*.sqlite
+backend/*.sqlite3
+
+# ── Python ───────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+venv/
+venv*/
+.venv/
+env/
+
+# ── Node / Frontend ──────────────────────────────────────────
+node_modules/
+dist/
+build/
+frontend/dist/
+frontend/dist-ssr/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.vercel/
+
+# ── macOS ─────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── IDE ────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ── Test tokens / temp files ──────────────────────────────────
+backend/.test_token
+*.tmp
+*.bak
+
+# ── Logs ─────────────────────────────────────────────────────
+logs/
+*.log

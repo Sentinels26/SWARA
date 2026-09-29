@@ -1,0 +1,1065 @@
+
+SWARA
+Survivor Wellness, Assessment & Rehabilitation from Atrocities
+SENTINELS 1.0  •  SIH 2026  •  SIH26094
+ MASTER DOCUMENT — COMPLETE CONCEPT, WORKFLOW, UI, BUTTONS, AI, BACKEND, SAFETY, DEMO & JUDGE Q&A
+NOTE: What this document is This is the single working reference for understanding SWARA from scratch and for explaining, designing or implementing the prototype. It consolidates the existing SWARA Complete Project Master Document, the current SIH presentation material and the defined product principles. Where the source documents do not specify an exact UI control label or backend endpoint, this document marks the item as a proposed implementation detail rather than presenting it as an already-built fact.
+
+CONTENTS
+1. Project identity and one-minute mental model
+2. Problem statement and invisible gap
+3. What SWARA is — and is not
+4. Core principles
+5. Complete end-to-end lifecycle
+6. Survivor experience: every screen and control
+7. Professional experience: every screen and control
+8. Consent, privacy and access control
+9. Daily check-in system
+10. Multimodal signal collection
+11. Personal baseline engine
+12. Longitudinal change detection
+13. Multimodal fusion
+14. Support-priority engine
+15. WHY / explainability layer
+16. Human-in-the-loop decision workflow
+17. Safety, SOS, missed check-in and emergency override
+18. Guided wellbeing / 50-day journey
+19. Personalised recommendations
+20. Progress, journey and closure report
+21. Case lifecycle and professional actions
+22. Technical architecture
+23. Data model
+24. API / service responsibilities
+25. AI / ML implementation blueprint
+26. Notifications and health integrations
+27. Security and data governance
+28. MVP vs future extensions
+29. Feasibility, risks and mitigation
+30. Prototype/demo plan
+31. Example case walkthrough
+32. What must never be claimed
+33. Judge Q&A
+34. 60-second pitch
+35. PPT extraction map
+36. Source-control and open implementation questions
+
+1. PROJECT IDENTITY AND ONE-MINUTE MENTAL MODEL
+Item
+Definition
+Project
+SWARA
+Full form
+Survivor Wellness, Assessment & Rehabilitation from Atrocities
+Team
+SENTINELS 1.0
+SIH problem
+SIH26094 — AI-Powered Dynamic Mental Health Monitoring and Distress Prediction System for Victims of Atrocities
+Core category
+Consent-driven, AI-assisted, longitudinal wellbeing monitoring and support-prioritisation
+Primary human decision-maker
+Psychologist / authorised mental-health professional
+Core slogan
+SWARA recommends. The professional decides.
+Core innovation
+Personal baseline + longitudinal change detection + explainable support priority + professional-controlled case lifecycle
+Core MVP
+Smartphone-first consent → daily check-in → personal baseline → change detection → support priority → WHY → professional dashboard
+
+The simplest way to understand SWARA:
+Human referral  →  Consent  →  Understand  →  Baseline  →  Daily signals  →  Change detection  →  Support priority  →  WHY  →  Professional review  →  Human action  →  Continued monitoring  →  Closure  →  Journey report
+NOTE: One-line explanation SWARA helps a professional notice meaningful changes in a survivor's wellbeing between periodic human interactions, using only consented information and keeping the professional in control.
+2. PROBLEM STATEMENT AND THE INVISIBLE GAP
+The source project definition identifies the deeper problem as the gap between continuous lived experience and periodic professional assessment.
+Wellbeing can change across days and weeks.
+A single conversation or one-time assessment can miss longitudinal patterns.
+Professionals may not have a structured view of changes between sessions.
+Different people have different normal patterns; generic thresholds can create false alarms.
+Survivors of atrocities require unusually careful handling of privacy, dignity, consent and safety.
+Existing services are valuable, but a monitoring and prioritisation layer can organise changing support needs for human review.
+Technology must not turn a survivor into a continuously surveilled data source.
+Periodic professional interaction  →  INVISIBLE GAP  →  Consented between-interaction signals  →  Longitudinal view for professional review
+NOTE: Positioning SWARA is designed to complement existing services such as Tele-MANAS, DMHP and local professionals rather than replace them.
+3. WHAT SWARA IS — AND IS NOT
+SWARA IS
+SWARA IS NOT
+Survivor-centred
+An autonomous diagnostic system
+Consent-driven
+Coercive surveillance
+Longitudinal
+A one-session chatbot
+AI-assisted
+A replacement for a psychologist
+Human-supervised
+An autonomous clinical decision-maker
+Support prioritisation
+A diagnosis of PTSD, depression or another disorder
+Explainable
+A black-box label with no reason
+Professional-controlled case lifecycle
+An automatically closed treatment case
+Optional multimodal monitoring
+A requirement for every sensor or wearable
+
+NOTE: Critical wording Use “support priority”, “meaningful change”, “longitudinal pattern”, “human review” and “decision support”. Avoid presenting a support-priority level as a diagnosis.
+4. CORE PRINCIPLES
+Consent before sensitive collection.
+Modular permissions: a survivor may use the core workflow without every optional modality.
+Personal baseline over generic assumptions.
+Longitudinal pattern over isolated event.
+Multiple signals should be interpreted together where available.
+Explainability before professional action.
+Human-in-the-loop at every consequential decision.
+Missed check-in is not automatically an emergency.
+Explicit immediate safety concern uses a separate safety pathway.
+Professional authorisation is required for closure.
+Minimum necessary data and controlled access.
+Prototype claims must remain separate from future production capabilities.
+5. COMPLETE END-TO-END LIFECYCLE
+Stage
+What happens
+4.1 Professional Referral
+An authorised professional or appropriate support pathway initiates the case.
+4.2 Consent & Privacy Setup
+Explain collection, purpose, access, alerts, trusted contacts and optional sensors. Survivor chooses check-in time.
+4.3 Initial Profile & Context
+Collect relevant personal, family, social, environmental, routine and incident-related context gradually.
+4.4 Initial Wellbeing State
+Record a starting reference; it is not a diagnosis.
+4.5 Personal Baseline
+Learn the survivor's typical pattern across available signals.
+4.6 Daily Check-in
+Approximately 5–10 minutes through text, voice or structured self-report.
+4.7 Guided Wellbeing
+Optional 15-minute daily meditation/wellbeing journey for 50 days with two configurable reminders.
+4.8 Optional Camera Guidance
+With permission, basic posture estimation during meditation; never a clinical assessment.
+4.9 Interactive Guidance
+Simple guidance on posture, breathing comfort, attention and the exercise.
+4.10 Personalised Recommendations
+Optional low-risk activities matched to preferences and observed/contextual changes.
+4.11 Wearable/Health Data
+Optional sleep, activity and heart-rate trends from compatible APIs.
+4.12 Longitudinal AI Analysis
+Analyse patterns over multiple sessions.
+4.13 Change Detection
+Compare recent observations with the personal baseline.
+4.14 Support Priority
+Stable / Observe / Elevated / High Priority.
+4.15 WHY
+Show major contributing signals, time window and degree of deviation.
+4.16 Psychologist Review
+Professional decides Monitor / Contact / Visit / Refer / Escalate.
+4.17 Existing-Service Connection
+Connect or refer to appropriate existing support pathways.
+4.18 Missed Check-in
+Predefined alert workflow according to consent and safety settings.
+4.19 Emergency Override
+Explicit immediate safety concern bypasses routine scoring and activates the predefined human/emergency pathway.
+4.20 Continuous Monitoring
+Continue the longitudinal journey after human intervention.
+4.21 Final Professional Assessment
+Psychologist performs the final assessment after sustained improvement.
+4.22 Case Closure
+Professional authorises closure on the professional side and SWARA.
+4.23 Survivor Journey Report
+Generate a progress/completion report; not a medical declaration of being cured.
+
+6. SURVIVOR EXPERIENCE — EVERY SCREEN AND CONTROL
+The source master document explicitly defines these survivor areas: Home, Daily Check-in, Meditation, Recommendations, My Progress, SOS, and Consent & Privacy. The exact button map below is a functional implementation specification built from those defined functions. Controls marked “Proposed” are not claimed to be literal buttons already present in the source prototype.
+6.1 Access / Login / Consent Entry
+Purpose: Authenticate the survivor and enter the authorised case flow.
+Sign In — Proposed — Authenticate an existing survivor account.
+Continue — Proposed — Proceed to the next onboarding step.
+Back — Proposed — Return without losing already saved consent choices.
+Privacy & Consent — Open the explanation of what is collected, why, who can access it and how alerts work.
+6.2 Consent & Privacy
+Purpose: Configure permission before sensitive collection.
+Allow text/check-in — Proposed — Enable the core text/self-report workflow.
+Allow microphone — Proposed — Enable voluntary voice interaction.
+Allow camera — Proposed — Enable optional meditation posture guidance.
+Connect health data — Proposed — Enable compatible health/activity data if available.
+Allow missed-check-in alerts — Proposed — Enable the predefined trusted-contact/professional alert workflow.
+Choose check-in time — Proposed — Set the preferred daily interaction time.
+Save consent — Proposed — Persist the selected permissions and consent record.
+Change permissions — Proposed — Review/change permitted sources where policy allows.
+6.3 Home
+Purpose: Show today's action, journey and next reminder.
+Start Today's Check-in — Source-defined function — Open the daily check-in.
+Continue Journey — Proposed — Open the current wellbeing/meditation journey.
+View Reminder — Proposed — Show the next scheduled reminder.
+View Progress — Source-defined area — Open My Progress.
+SOS — Source-defined area — Open the SOS/trusted-contact pathway.
+Recommendations — Source-defined area — Open personalised recommendations.
+Profile / Privacy — Proposed — Open profile and consent/privacy settings.
+6.4 Daily Check-in
+Purpose: Collect a short, calm daily interaction.
+Text input — Source-defined modality — Enter a voluntary written check-in.
+Record Voice — Source-defined optional modality — Start a voluntary voice recording.
+Stop Recording — Proposed — Stop voice capture.
+Use Voice Transcript — Proposed — Confirm/use speech-to-text output where implemented.
+Self-assessment controls — Source-defined — Provide structured answers on perceived distress, emotional wellbeing, sleep difficulties, sense of safety, social withdrawal and ability to perform daily activities.
+Skip optional modality — Proposed — Continue without voice or another optional input.
+Submit Check-in — Proposed — Store the check-in and send authorised data for processing.
+Save Draft — Proposed — Save incomplete non-sensitive form state locally if the implementation supports it.
+6.5 Meditation / Guided Wellbeing
+Purpose: Provide the optional 15-minute guided session.
+Start Session — Source-defined function — Start the guided wellbeing/meditation session.
+Pause — Proposed — Pause the session.
+Resume — Proposed — Resume the session.
+Stop Session — Proposed — End the session early.
+Camera Guidance — Source-defined optional function — Enable basic posture feedback with explicit permission.
+Ask Guidance — Source-defined function — Ask questions during the session.
+Next Step — Proposed — Advance to the next guided instruction.
+Finish Session — Proposed — Record completion/progress.
+6.6 Recommendations
+Purpose: Show optional personalised activities.
+Open Recommendation — Proposed — Read a suggested activity.
+Accept / Start — Proposed — Choose to follow the suggestion.
+Dismiss — Source-defined control — Dismiss a recommendation.
+Change / Not for me — Source-defined control — Indicate the recommendation is not appropriate/preferred.
+View Another — Proposed — Request another suitable optional suggestion.
+6.7 My Progress
+Purpose: Show simple longitudinal trends and journey milestones.
+Time Range — Proposed — Change the visible period.
+View Trend — Proposed — Inspect wellbeing/activity/engagement trend information.
+View Milestones — Source-defined function — Open journey milestones.
+Open Journey Report — Proposed — Open the final report after closure or the available progress view before closure.
+6.8 SOS / Trusted Contacts
+Purpose: Provide access to the predefined support pathway.
+View Trusted Contacts — Source-defined area — Show the contacts configured during onboarding, subject to privacy rules.
+Contact Trusted Person — Proposed — Initiate the configured contact pathway.
+Emergency Support — Proposed — Open the deployment's defined human/emergency pathway.
+Back to Safety Options — Proposed — Return to the support choices.
+6.9 Consent & Privacy Settings
+Purpose: Let the survivor understand and manage permissions.
+View Data Sources — Source-defined function — See what data sources are permitted.
+Change Permission — Source-defined function — Change a permission where policy permits.
+View Alert Settings — Proposed — Review the missed-check-in alert arrangement.
+View Privacy Explanation — Source-defined function — Read collection/purpose/access explanation.
+7. PROFESSIONAL EXPERIENCE — EVERY SCREEN AND CONTROL
+7.1 Professional Access
+Purpose: Authenticated role-based access for authorised professionals.
+Sign In — Proposed — Authenticate the professional.
+Forgot Password — Proposed — Account recovery if enabled.
+Dashboard — Proposed — Open the case dashboard.
+Logout — Proposed — End the session.
+7.2 Case List
+Purpose: See assigned/authorised cases.
+Open Case — Source-defined function — Open a survivor's longitudinal case.
+Filter — Proposed — Filter by support-priority status or alert state if implemented.
+Search — Proposed — Find an authorised case.
+Sort — Proposed — Sort by recent activity/priority/alert time if implemented.
+7.3 Case Overview
+Purpose: See current support priority and key longitudinal context.
+Support Priority — Source-defined display — Show Stable / Observe / Elevated / High Priority.
+WHY? — Source-defined control — Open the explainability panel.
+Timeline — Source-defined area — Open the longitudinal wellbeing timeline.
+Baseline Comparison — Source-defined area — Compare current observations with the personal baseline.
+Recent Check-ins — Source-defined area — Review relevant recent check-ins/summaries.
+Alerts — Source-defined area — Review missed check-ins and safety alerts.
+7.4 WHY Panel
+Purpose: Explain why SWARA surfaced the case.
+Expand Signal — Proposed — Show more detail for a contributing signal.
+View Time Window — Proposed — Show the period used for the observed change.
+View Baseline — Source-defined concept — Show the personal baseline relationship.
+View Evidence Summary — Source-defined concept — Show confidence/evidence summary where available.
+Close WHY — Proposed — Return to case overview.
+7.5 Professional Action
+Purpose: Human decides the next step.
+MONITOR — Source-defined action — Continue observation under the professional plan.
+CONTACT — Source-defined action — Record/initiate a human contact/follow-up workflow.
+VISIT — Source-defined action — Record a planned/in-person visit pathway.
+REFER — Source-defined action — Refer to an appropriate service/professional.
+ESCALATE — Source-defined action — Activate the deployment's defined escalation pathway.
+Add Note — Source-defined follow-up function — Record a professional note/action.
+Save Action — Proposed — Persist the selected human action.
+7.6 Missed Check-in Alert
+Purpose: Show a predefined support alert.
+Open Alert — Proposed — View missed date/time and context.
+View Trusted Contacts — Source-defined safety pathway — See the configured contacts as permitted.
+Contact / Follow Up — Proposed — Begin the human follow-up workflow.
+Resolve Alert — Proposed — Record that the alert has been reviewed/handled.
+7.7 Case Closure
+Purpose: Close only under professional authorisation.
+Final Assessment — Source-defined function — Record the final professional assessment.
+Authorise Closure — Source-defined control — Authorise case closure.
+Cancel Closure — Proposed — Return to active monitoring.
+Generate Journey Report — Source-defined function — Create the Survivor Journey / Wellbeing Completion Report.
+8. CONSENT, PRIVACY AND ACCESS CONTROL
+Permission / record
+Why it exists
+Core rule
+Text/self-report
+Core longitudinal interaction
+Consent-based; core workflow should work with this.
+Microphone
+Optional voice interaction
+Voluntary and easy to skip.
+Camera
+Optional posture guidance
+Never present as clinical assessment.
+Wearable/health API
+Supplementary sleep/activity/heart-rate trends
+Optional; unavailable data must not break the core.
+Trusted contacts
+Predefined missed-check-in support workflow
+Explicitly explain who receives what and when.
+Check-in schedule
+Daily interaction timing
+Survivor chooses a comfortable time.
+Consent record
+Accountability
+Record what was agreed and when.
+
+Data minimisation: collect only what is needed for a defined purpose.
+Role-based access: survivor, psychologist and administrator should see only what their role requires.
+Encryption in transit and at rest.
+Audit logs for sensitive access and important actions.
+Define retention and deletion/withdrawal handling before real deployment.
+Keep identity/contact information logically separated from analytics where feasible.
+Never use real survivor data merely to make a demo look realistic.
+Do not claim regulatory compliance simply because some security principles are implemented.
+9. DAILY CHECK-IN SYSTEM
+Open check-in  →  Self-report / text / optional voice  →  Validate input  →  Store authorised record  →  Process signals  →  Compare with baseline  →  Update longitudinal record  →  Return safe user-facing result
+The intended interaction is approximately 5–10 minutes and should feel calm and familiar rather than like a clinical interrogation.
+Perceived distress
+Emotional wellbeing
+Sleep difficulties
+Sense of safety
+Social withdrawal
+Ability to perform daily activities
+Voluntary written communication
+Voluntary voice interaction
+10. MULTIMODAL SIGNAL COLLECTION
+Signal
+Examples
+Status
+Important limitation
+Text
+Communication patterns, engagement, linguistic/contextual patterns
+Core
+No single word is proof of a severe outcome.
+Self-report
+Distress, wellbeing, sleep, safety, withdrawal, daily activity
+Core
+Self-report is a longitudinal input, not a diagnosis.
+Context
+Routine, social environment, support network
+Core/consented
+Context helps avoid interpreting every signal in isolation.
+Voice
+Speech-to-text, rate, pauses, acoustic characteristics
+Optional
+Longitudinal change, not one sample alone.
+Wearable/health
+Sleep, activity/steps, heart-rate trends, other compatible metrics
+Optional
+Not mandatory; availability varies.
+Camera
+Basic posture estimation during meditation
+Optional
+Not a clinical assessment.
+
+NOTE: No modality requirement If a survivor refuses voice, SWARA can continue with text and self-report. If wearable data is unavailable, the core workflow remains functional.
+11. PERSONAL BASELINE ENGINE
+Personal baseline is one of SWARA's defining ideas. Instead of assuming one normal range for every survivor, the system learns the individual's typical pattern and looks for persistent deviations.
+Historical observations  →  Typical personal pattern  →  Recent observations  →  Baseline comparison  →  Deviation magnitude + persistence  →  Longitudinal change
+Example period
+Pattern
+Week 1
+Stable
+Week 2
+Stable
+Week 3
+Slight change
+Week 4
+Significant / multiple changes
+Week 5
+Persistent deviation
+
+NOTE: Key mental model The question is not “Is this person outside a generic population threshold?” but “How has this person's state changed compared with their own normal pattern?”
+12. LONGITUDINAL CHANGE DETECTION
+Look across multiple observations rather than one isolated event.
+Compare current patterns with the personal baseline.
+Consider persistence and magnitude of deviation.
+Use multiple available signals when they exist.
+Track missingness/data completeness so absence of data is not silently treated as a negative signal.
+Keep explicit immediate safety concerns on a separate pathway.
+Baseline  →  Current observations  →  Meaningful/persistent deviation?  →  No → continue monitoring  →  Yes → multimodal fusion → support priority → WHY → professional review
+13. MULTIMODAL FUSION
+Text  →  Voice  →  Self-report  →  Context  →  Sleep  →  Activity  →  Heart-rate trends  →  Signal processing  →  Personal baseline  →  Change detection  →  Multimodal fusion  →  Support priority
+NOTE: Design rule The system does not require every modality. Fusion should use whatever consented, available signals exist and remain explicit about missing data.
+14. SUPPORT-PRIORITY ENGINE
+Level
+Meaning
+Typical system behaviour
+STABLE
+No significant change from established personal baseline.
+Continue routine monitoring.
+OBSERVE
+Early/smaller changes detected.
+Continue observation and routine support.
+ELEVATED
+Meaningful or persistent changes suggest increased human attention may be useful.
+Surface WHY and request professional review.
+HIGH PRIORITY
+Multiple converging signals and/or an explicit immediate safety concern require prompt human attention under the predefined pathway.
+Prompt human review; explicit safety concern can activate emergency override.
+
+NOTE: Never call this a diagnosis The priority answers “Does this survivor appear to need increased human attention?” It does not answer “What mental illness do they have?”
+15. WHY / EXPLAINABILITY LAYER
+A professional should not receive an unexplained AI label. SWARA should show the major changes contributing to the recommendation.
+WHY component
+Example
+Priority
+ELEVATED
+Signal 1
+Self-reported distress increased
+Signal 2
+Sleep decreased
+Signal 3
+Activity decreased
+Signal 4
+Engagement decreased
+Signal 5
+Communication changed
+Baseline relation
+Baseline deviation significant
+Evidence
+Confidence/evidence summary where implemented
+Recommended next step
+Human professional review
+
+Inputs  →  Processing  →  Baseline comparison  →  Change detection  →  Context  →  Safety  →  Support priority  →  WHY  →  Professional review
+NOTE: Validation requirement The exact model and thresholds should be validated with mental-health professionals and tested before real-world clinical deployment.
+16. HUMAN-IN-THE-LOOP DECISION WORKFLOW
+Data  →  AI analysis  →  Change detection  →  Support priority  →  WHY  →  Psychologist  →  Monitor / Contact / Visit / Refer / Escalate
+The psychologist interprets the information.
+The psychologist can accept, reject or reinterpret the recommendation.
+The psychologist owns intervention decisions.
+The psychologist owns referral and escalation decisions.
+The psychologist performs the final assessment.
+The psychologist authorises case closure.
+NOTE: Core sentence SWARA recommends. The professional decides.
+17. SAFETY, SOS, MISSED CHECK-IN AND EMERGENCY OVERRIDE
+17.1 Missed check-in
+Scheduled check-in missed  →  Predefined protocol  →  Trusted Contact 1 + Trusted Contact 2 receive missed date/time  →  Psychologist receives alert recommending human contact
+NOTE: Critical distinction A missed check-in by itself is not proof of an emergency. The workflow must be governed by explicit informed consent and a clearly communicated safety protocol.
+17.2 Explicit immediate safety concern
+Explicit immediate safety concern  →  Bypass routine scoring  →  Predefined human/emergency pathway  →  Human response
+The exact emergency routing must be defined by the real deployment. SWARA should not pretend to be an emergency service.
+17.3 Safety controls
+Safety pathway must have a humanly accountable owner.
+Emergency handling should not depend only on an ML score.
+Camera/microphone/wearable permissions must be explicit.
+Do not describe every missed check-in as an emergency.
+Do not claim certainty about future harm.
+18. GUIDED WELLBEING / 50-DAY JOURNEY
+Feature
+Definition
+Session
+15-minute daily guided meditation/wellbeing session.
+Duration
+50-day product/engagement journey.
+Reminder
+Two configurable reminders/alarms can support the routine.
+Camera
+Optional posture guidance with permission.
+Interactive guidance
+Questions about posture, breathing comfort, attention and the exercise.
+Progress
+Track consistency and journey milestones.
+Clinical meaning
+The 50-day structure is not a clinical recovery deadline.
+
+NOTE: Important Meditation is a wellbeing module, not the clinical decision engine, and it must not be presented as a cure for trauma.
+19. PERSONALISED RECOMMENDATION ENGINE
+Observed/contextual signal
+Possible optional recommendation
+Reduced activity
+Short walk or gentle movement if appropriate
+Social withdrawal
+Connect with a trusted person
+Poor routine
+Try a consistent sleep/wake routine
+Interest in music
+Listen to preferred music
+Interest in plants
+Care for or keep a small plant
+Need for reflection
+Short journaling or daily reflection
+Preference for quiet routines
+Guided meditation or relaxation activity
+Low outdoor exposure
+Spend some time outdoors if comfortable and safe
+
+NOTE: Personalisation rule Recommendations are optional wellbeing suggestions, not medical prescriptions. The survivor can dismiss or change them.
+20. PROGRESS, JOURNEY AND CLOSURE REPORT
+Sustained improvement  →  Final professional assessment  →  Professional authorises closure  →  SWARA closes case  →  Journey / Wellbeing Completion Report
+Starting point
+Improvement trends
+Milestones
+Support interactions
+Completed wellbeing activities
+Final professional assessment
+Completion date
+NOTE: Report meaning It is a recognition/completion report documenting the journey. It is not a medical certificate declaring the survivor “cured” or “100% healed.”
+21. CASE LIFECYCLE AND PROFESSIONAL ACTIONS
+Action
+Meaning in SWARA
+MONITOR
+Continue observation and longitudinal tracking.
+CONTACT
+Human follow-up/contact.
+VISIT
+Plan or conduct an appropriate visit.
+REFER
+Connect the survivor to another appropriate service/professional.
+ESCALATE
+Activate the deployment's defined escalation pathway.
+
+Referral  →  Consent  →  Active monitoring  →  Change surfaced  →  Professional action  →  Continued monitoring  →  Sustained improvement  →  Final assessment  →  Closure  →  Journey report
+22. TECHNICAL ARCHITECTURE
+Layer
+Prototype technology
+Role
+Mobile application
+Flutter + Dart
+Android/iOS survivor and professional app
+API/backend
+Python + FastAPI
+Authentication, APIs, orchestration and business logic
+AI/ML
+Python, scikit-learn, NumPy, Pandas
+Feature processing, baseline, trend/change analysis
+NLP
+Transformers / suitable NLP model
+Text feature extraction and contextual language analysis
+Speech
+Whisper or suitable speech-to-text model/API
+Voluntary voice-to-text interaction
+Computer vision
+MediaPipe (optional)
+Basic posture guidance during meditation
+Database
+PostgreSQL
+Structured case and longitudinal data
+Local storage
+SQLite / Hive
+Caching/offline prototype data
+Charts
+Flutter charting library
+Wellbeing timeline and trends
+Notifications
+Firebase Cloud Messaging
+Daily reminders and alerts
+Health integration
+Android Health Connect / Apple HealthKit where applicable
+Wearable/health data
+Security
+HTTPS, JWT, RBAC, encryption, audit logs
+Protection and controlled access
+Deployment
+Docker + cloud
+Portable deployment
+
+Flutter  →  HTTPS  →  FastAPI  →  Python AI engine  →  Baseline + change detection  →  Support priority + WHY  →  PostgreSQL  →  Professional dashboard
+23. DATA MODEL — WHAT THE SYSTEM NEEDS TO REMEMBER
+NOTE: Implementation status The source documents define the information categories and workflow, but do not prescribe one exact database schema. The following is a proposed implementation mapping for the prototype.
+Entity
+Key fields / examples
+Purpose
+User
+id, role, auth metadata
+Role-based identity
+SurvivorProfile
+user_id, basic profile, preferences
+Profile and context
+ConsentRecord
+source, purpose, status, timestamp, version
+Proof of consent choices
+TrustedContact
+name/relationship/contact, consent scope
+Predefined safety workflow
+CheckIn
+timestamp, self-report fields, text, optional voice metadata
+Daily longitudinal record
+SignalObservation
+type, value/features, source, timestamp, completeness
+Normalised multimodal signal
+BaselineSnapshot
+period, feature summaries, baseline values
+Personal baseline
+ChangeEvent
+signal, magnitude, persistence, window
+Detected meaningful change
+PriorityAssessment
+level, evidence, confidence, timestamp
+Support-priority result
+WhyExplanation
+contributing signals, baseline comparison, data completeness
+Explainability
+ProfessionalAction
+action, note, actor, timestamp
+Human decision record
+Alert
+type, recipients, timestamp, status
+Missed-check-in/safety alerts
+Recommendation
+type, reason, status, user response
+Personalised wellbeing suggestions
+WellbeingSession
+date, duration, completion, camera-permission state
+50-day journey
+Case
+status, referral, assigned professional, lifecycle dates
+Case lifecycle
+ClosureAssessment
+professional assessment, authorisation, timestamp
+Controlled closure
+JourneyReport
+report metadata, milestones, trends
+Completion report
+AuditLog
+actor, action, resource, timestamp
+Sensitive access/action audit
+
+24. API / SERVICE RESPONSIBILITIES
+NOTE: Important The master sources specify the technology and functional flow, not exact endpoint names. These endpoint names are proposed implementation conventions.
+Proposed endpoint group
+Example operations
+Purpose
+/auth
+login, refresh, logout
+Secure authentication
+/consent
+get, update, history
+Consent management
+/profile
+get, update
+Survivor profile/context
+/checkins
+create, list, latest
+Daily check-in workflow
+/signals
+ingest, list
+Signal ingestion/normalisation
+/baseline
+get, recompute, history
+Personal baseline
+/changes
+list, detail
+Meaningful change events
+/priority
+latest, history
+Support-priority assessments
+/why
+get
+Explainability
+/recommendations
+list, accept, dismiss
+Personalised suggestions
+/meditation
+start, progress, complete
+50-day wellbeing journey
+/alerts
+list, acknowledge, resolve
+Safety/missed-check-in alerts
+/professional/actions
+create, list
+Human follow-up decisions
+/cases
+list, detail, close
+Case lifecycle
+/reports
+generate, retrieve
+Journey report
+/audit
+admin/query
+Sensitive access auditing
+
+25. AI / ML IMPLEMENTATION BLUEPRINT
+25.1 Processing pipeline
+Raw consented input  →  Validation  →  Normalisation  →  Feature extraction  →  Personal baseline comparison  →  Change detection  →  Fusion  →  Priority  →  WHY
+25.2 Text
+Extract longitudinal linguistic/contextual features using an appropriate NLP model.
+Track changes in communication patterns rather than treating a single word as proof.
+Store only the minimum representation required for the defined purpose.
+25.3 Voice
+Speech-to-text can make voice accessible to the text pipeline.
+Optional speech rate, pauses and acoustic characteristics can be considered where technically and ethically appropriate.
+Use longitudinal comparison rather than a one-sample conclusion.
+25.4 Baseline and change detection
+Start with transparent statistical/rule-based methods for the prototype.
+Represent baseline, recent window, deviation and persistence.
+Keep thresholds configurable and clearly labelled as prototype thresholds until validated.
+Do not invent clinical accuracy numbers.
+25.5 Fusion
+Combine available evidence across consented modalities.
+Account for missing data.
+Do not treat a missing wearable metric as a negative health signal.
+Surface evidence strength and uncertainty to the professional.
+25.6 Validation
+Professional co-design
+Appropriately governed and sourced data
+Held-out evaluation
+Subgroup/fairness analysis
+Calibration
+Prospective testing before real clinical use
+26. NOTIFICATIONS AND HEALTH INTEGRATIONS
+Service
+Use
+Status
+Firebase Cloud Messaging
+Daily reminders and alerts
+Prototype technology listed in source
+Android Health Connect
+Compatible health/activity data
+Optional / where applicable
+Apple HealthKit
+Compatible health/activity data
+Optional / where applicable
+Wearable data
+Sleep/activity/heart-rate trends
+Supplementary, not mandatory
+SMS/voice infrastructure
+Production alert delivery if deployment requires it
+Future/production extension, not core MVP
+
+NOTE: Connectivity Offline-friendly local storage and sync are identified as a mitigation for internet/device limitations where appropriate.
+27. SECURITY AND DATA GOVERNANCE
+Control
+Implementation principle
+Authentication
+Secure authenticated access.
+RBAC
+Survivor, professional and administrator permissions are separated.
+HTTPS
+Protect data in transit.
+Encryption
+Protect sensitive data at rest.
+Audit logs
+Record sensitive access and important actions.
+Consent records
+Record what was agreed and when.
+Purpose limitation
+Every sensitive data type must have a defined purpose.
+Data separation
+Separate identity/contact data from analytics where feasible.
+Retention/deletion
+Define retention and withdrawal handling.
+Prototype discipline
+Use synthetic/simulated data for demos rather than real survivor data.
+
+NOTE: Legal framing The project source says India's Digital Personal Data Protection Act, 2023 should be considered for real deployment alongside sector-specific requirements. The prototype should not claim regulatory compliance without the required review and evidence.
+28. MVP VS FUTURE EXTENSIONS
+Build first
+Future / scalable extension
+Flutter survivor interface
+Production Android/iOS optimisation
+Psychologist dashboard
+Multi-organisation deployment
+Text check-in
+More languages and dialect support
+Self-assessment
+Validated assessment integrations
+Personal baseline
+More sophisticated time-series models
+Support priority
+Professionally validated decision-support models
+WHY panel
+Advanced explainability
+Basic recommendations
+Personalised recommendation learning
+Simulated wearable data
+Live health/wearable APIs
+Basic voice-to-text
+Advanced speech-feature pipeline
+Simple meditation module
+Adaptive guided wellbeing content
+Prototype alerts
+Production SMS/voice/notification infrastructure
+
+29. FEASIBILITY, RISKS AND MITIGATION
+Challenge
+Risk
+Mitigation
+Privacy
+Loss of trust/harm from exposure
+Data minimisation, encryption, RBAC, consent, audit logs
+False positives
+Unnecessary alerts
+Personal baseline + persistence + human review
+False negatives
+Missed deterioration
+Multiple modalities, explicit self-report, safety override, professional oversight
+AI bias
+Unequal performance
+Diverse validation data, subgroup evaluation, human review
+AI over-reliance
+People assume AI is always correct
+Clear limitations, WHY panel, professional control
+Low engagement
+Survivor stops checking in
+Short sessions, calm UX, personalisation, reminders, human follow-up
+Camera discomfort
+Feels like surveillance
+Optional camera, explicit consent, local processing where feasible
+Wearable availability
+Unequal access
+Keep wearables optional
+Internet/device limits
+Missed data
+Offline-friendly local storage and sync where appropriate
+Emergency ambiguity
+Urgent need may be missed
+Separate explicit safety pathway
+Clinical validity
+Unvalidated model treated as medical truth
+Professional co-design, validation, pilots, governance and review
+Scope creep
+Prototype becomes impossible
+Protect the core vertical slice
+
+30. PROTOTYPE / DEMO PLAN
+30.1 Five-hour priority order
+Priority
+Feature
+Demo importance
+P0
+Onboarding + consent
+Essential
+P0
+Daily check-in
+Essential
+P0
+Personal baseline
+Essential
+P0
+Change detection
+Essential
+P0
+Support-priority levels
+Essential
+P0
+WHY panel
+Essential
+P0
+Psychologist dashboard
+Essential
+P1
+Missed-check-in simulation
+High
+P1
+Personalised recommendations
+High
+P1
+Case closure/report
+High
+P2
+Voice analysis
+Optional
+P2
+Wearable integration
+Optional/simulated
+P2
+Camera posture guidance
+Optional
+P2
+Full production notification infrastructure
+Future
+
+30.2 Ideal judge demo sequence
+Start with a synthetic survivor account.
+Show professional referral.
+Show modular consent and check-in-time selection.
+Show a short daily check-in.
+Show historical data establishing a personal baseline.
+Introduce several days/weeks of synthetic changes.
+Show the change-detection result.
+Show the support-priority level.
+Open WHY and explain the contributing signals.
+Switch to the psychologist dashboard.
+Choose a human action such as MONITOR or CONTACT.
+Demonstrate a missed check-in alert.
+Optionally show a wellbeing recommendation.
+Show sustained improvement.
+Show final professional assessment and authorised closure.
+Generate the Survivor Journey / Wellbeing Completion Report.
+NOTE: Demo discipline Clearly label simulated wearable data, prototype-only components and illustrative thresholds. Never use real survivor data to make the demo appear more realistic.
+31. EXAMPLE CASE WALKTHROUGH — ASHA
+The source master document uses Asha as a fictional SIH demonstration case.
+A psychologist initiates Asha's SWARA case.
+Asha reviews privacy, data sources, alerts and trusted contacts and chooses her preferred check-in time.
+Asha gradually provides family, social, routine and support context.
+SWARA learns her typical sleep, activity, engagement and self-reported wellbeing pattern.
+Asha uses short text/voice/self-report interactions.
+Over time, distress rises, sleep becomes more disrupted, activity falls and engagement changes compared with her baseline.
+SWARA marks the situation Elevated and shows the WHY panel.
+The psychologist reviews the information and decides the appropriate follow-up.
+SWARA suggests optional activities aligned with Asha's preferences.
+If a scheduled check-in is missed, the predefined alert workflow operates according to consent.
+Later longitudinal data shows sustained improvement.
+The psychologist performs the final assessment and authorises closure.
+SWARA produces the Survivor Journey / Wellbeing Completion Report.
+32. WHAT SWARA MUST NEVER CLAIM
+It diagnoses PTSD, depression or another mental-health disorder.
+AI can determine with certainty whether someone will die by suicide.
+A particular heart rate, sleep value or word proves a mental-health condition.
+Meditation alone heals trauma.
+An AI score proves 100% healing.
+Every missed check-in is an emergency.
+The prototype is clinically or regulatorily validated before the required processes occur.
+AI replaces the psychologist.
+All wearables or sensors are required.
+Government integration already exists unless it has actually been implemented and verified.
+NOTE: Strong positioning AI-assisted support prioritisation with professional oversight.
+33. JUDGE Q&A — PREPARED ANSWERS
+Q: Isn't this just another mental-health chatbot?
+A: No. A chatbot is primarily conversation-based. SWARA is longitudinal: it establishes a personal baseline, monitors meaningful changes, provides explainable support-priority information to a psychologist, recommends personalised wellbeing actions and manages a support lifecycle from referral to professional-authorised closure.
+Q: Are you diagnosing mental illness?
+A: No. SWARA does not diagnose. It identifies meaningful changes from an individual's baseline and converts them into a support-priority level for human review.
+Q: Are you predicting suicide?
+A: We deliberately avoid presenting SWARA as a suicide-prediction system. If a survivor explicitly indicates an immediate safety concern, SWARA uses an emergency override and predefined human/emergency pathway rather than waiting for an AI prediction.
+Q: Why do you need AI?
+A: Information can be distributed across days and multiple signals. AI helps organise longitudinal information, identify meaningful patterns and surface them for professional review.
+Q: Why personal baseline?
+A: People have different normal patterns. A change that is unusual for one person may be normal for another. Comparing a survivor with their own history makes monitoring more personalised.
+Q: What if the AI is wrong?
+A: The AI does not independently make a clinical decision. It provides an explainable recommendation to the psychologist, who can accept, reject or reinterpret it.
+Q: Why the WHY panel?
+A: A professional should not receive a black-box label. The WHY panel shows which signals changed and how they relate to the person's baseline.
+Q: Why meditation?
+A: Meditation is an optional wellbeing module within the journey, not the clinical decision engine.
+Q: Why 50 days?
+A: Fifty days is a structured engagement design choice, not a claim that recovery takes exactly 50 days.
+Q: Why camera during meditation?
+A: The camera is optional and consent-based. Its purpose is basic posture guidance, not diagnosis.
+Q: What if the survivor refuses camera access?
+A: The survivor can continue using meditation and other SWARA functions without camera access.
+Q: Why alert trusted contacts for a missed check-in?
+A: A missed scheduled interaction can be a support signal. Under the predefined consent and safety protocol, trusted contacts and the psychologist are informed so a human can decide what to do. A missed check-in alone is not treated as proof of an emergency.
+Q: Why two SOS contacts?
+A: It provides redundancy if one trusted contact is unavailable.
+Q: Can SWARA close a case automatically?
+A: No. Closure is human-controlled. The psychologist performs the final assessment and authorises closure.
+Q: What is the final report?
+A: A Survivor Journey / Wellbeing Completion Report showing progress, milestones, support journey and completion. It is not a medical certificate declaring the person cured.
+Q: What if the survivor has a bad day?
+A: A single bad day should not automatically produce a high-priority result. The longitudinal system looks for meaningful and persistent changes, while explicit immediate safety concerns use a separate pathway.
+Q: How is this different from Tele-MANAS?
+A: Tele-MANAS provides an important mental-health support and access pathway. SWARA does not replace it. SWARA adds longitudinal monitoring, personal-baseline change detection, explainability and professional workflow, and can connect survivors to existing services.
+Q: What if the survivor stops using SWARA?
+A: The predefined missed-check-in workflow can alert the configured trusted contacts and psychologist according to consent and safety settings. The psychologist decides the appropriate follow-up.
+Q: What if wearable data is unavailable?
+A: Wearables are supplementary. SWARA's core workflow can operate with self-report, text, voice and engagement information.
+Q: How do you protect privacy?
+A: Through informed consent, data minimisation, controlled access, encryption, secure storage, audit logs and explicit permissions for sensitive sensors.
+Q: Can AI replace the psychologist?
+A: No. SWARA is explicitly human-in-the-loop. AI identifies patterns and recommends attention; the psychologist interprets, intervenes and closes the case.
+Q: Why Python?
+A: Python has a strong ecosystem for AI, NLP, speech and data processing. FastAPI gives us an efficient API layer. Keeping the AI and backend in Python reduces integration complexity.
+Q: Why Flutter?
+A: Flutter gives one mobile codebase for Android and iOS while supporting camera, microphone, notifications and health-data integrations.
+Q: How will you validate the AI?
+A: With professional co-design, carefully sourced and appropriately governed data, held-out evaluation, subgroup/fairness analysis, calibration and prospective testing before real clinical use.
+Q: What is the innovation?
+A: The integrated survivor journey: personal baseline, longitudinal multimodal change detection, explainable support priority, personalised wellbeing recommendations, proactive escalation and professional-controlled case management.
+Q: How will you scale?
+A: The system is modular and containerisable. AI services, APIs, notifications and databases can scale independently. Local-language support and institution-specific referral pathways can be added without rebuilding the core.
+Q: Who pays for it?
+A: The ethical model is primarily institutional: government programmes, hospitals and NGOs can license the platform. Vulnerable survivors should not be monetised through sale of sensitive data.
+Q: What is the biggest limitation?
+A: Clinical validity and real-world safety validation. The prototype demonstrates workflow and technical feasibility; real deployment would require professional validation, governance, security assessment, appropriate regulatory review and evidence generation.
+34. 60-SECOND PITCH
+SWARA stands for Survivor Wellness, Assessment & Rehabilitation from Atrocities. The problem we are addressing is the gap between a survivor's day-to-day wellbeing and periodic professional interactions. SWARA begins with authorised referral and informed consent, gradually understands the survivor's context and establishes their personal wellbeing baseline. Through short daily check-ins, self-reports, optional voice interaction, guided wellbeing activities and compatible health signals, SWARA builds a longitudinal picture of change. Our AI does not diagnose or claim to predict someone's future. Instead, it identifies meaningful deviations from the survivor's personal baseline, explains why they matter and generates a support-priority level for psychologist review. SWARA can recommend personalised, low-risk wellbeing activities and, under a predefined safety protocol, alert trusted contacts and the psychologist when a scheduled check-in is missed. The psychologist remains in control of intervention and case closure. Once sustained improvement is professionally assessed and the case is closed, SWARA generates a Survivor Journey Report documenting progress and milestones. In short, SWARA does not replace the psychologist; it helps the psychologist notice what may otherwise be missed between two human interactions.
+35. PPT EXTRACTION MAP
+Slide
+What to show
+1 — Problem / Gap
+Invisible gap after atrocity, episodic interaction, personal baseline gap, fragmented support, black-box prioritisation, no structured escalation/closure.
+2 — Solution
+SWARA, survivor-centred flow, core features, personal baseline, longitudinal monitoring, explainable WHY, professional dashboard.
+3 — Technical Approach
+Referral → consent → profile → baseline → daily loop → signals → change detection → fusion → priority → WHY → professional review → closure.
+4 — Product / UI
+Survivor Home, Check-in, Meditation, Recommendations, Progress, SOS, Consent/Privacy + professional dashboard/WHY/actions.
+5 — Feasibility / Impact
+Smartphone-first MVP, stack, risks/mitigation, phased deployment, stakeholders and benefits.
+6 — Differentiation / Research
+General chatbot vs SWARA, reference ecosystem, responsible AI, human oversight, final value proposition.
+
+NOTE: PPT rule The six-slide deck is the concise extraction. This master document contains the detail that the PPT cannot fit.
+36. SOURCE-CONTROL AND OPEN IMPLEMENTATION QUESTIONS
+This section prevents the team from accidentally presenting assumptions as completed features.
+Item
+Status in source material
+What the team should do
+Core SWARA concept
+Defined
+Treat as canonical.
+End-to-end lifecycle
+Defined
+Treat as canonical.
+Survivor UI sections
+Defined at feature/area level
+Use this document's button map as implementation specification; confirm final visual UI.
+Exact button labels
+Not fully enumerated in source
+Treat proposed labels as implementation choices until the actual UI is frozen.
+Exact API endpoint names
+Not defined
+Choose and document them in the codebase.
+Exact AI model/thresholds
+Not fully defined/validated
+Use transparent prototype logic; do not claim clinical validity.
+Real survivor dataset
+Not available/should not be fabricated
+Use synthetic/simulated demo data.
+Live government integration
+Not required for MVP
+Describe as future integration unless actually implemented.
+Wearables
+Optional
+Simulate for demo if needed and label clearly.
+Camera posture guidance
+Optional
+Keep modular; never describe as diagnosis.
+Production notifications
+Future
+Demo alert workflow if infrastructure is not production-ready.
+Regulatory/clinical validation
+Future requirement
+Do not claim completed validation.
+
+NOTE: Golden rule If a judge asks “Is this actually implemented?”, answer precisely: distinguish working prototype, simulated component, planned extension and research/validation requirement.
+FINAL ONE-PAGE MENTAL MODEL
+Consent  →  Understand  →  Baseline  →  Daily signals  →  Change  →  Fuse  →  Priority  →  WHY  →  Professional  →  Action  →  Monitor  →  Improve  →  Assess  →  Close  →  Report
+SWARA DOES
+SWARA DOES NOT
+Understand survivor context
+Diagnose
+Establish personal baseline
+Replace psychologists
+Detect meaningful changes
+Autonomously prescribe treatment
+Fuse available consented signals
+Claim certainty about future harm
+Assign support priority
+Treat one signal as proof
+Explain WHY
+Close without professional approval
+Recommend optional wellbeing actions
+Sell vulnerable users' sensitive data
+Support professional case management
+Turn every missed check-in into an emergency
+
+SWARA: FROM CONTINUOUS SIGNALS TO MEANINGFUL HUMAN ATTENTION — WITHOUT REPLACING THE HUMAN TOUCH.
+
+SOURCE BASIS USED FOR THIS MASTER DOCUMENT
+SWARA_Complete_Project_Master_Document.pdf — the primary detailed project specification available in the conversation.
+SWARA_SIH26094_Final (1)-1.pptx — current SWARA SIH presentation and technical/flow framing.
+merged_presentation_choladeck.pptx — merged SIH reference/template presentation; used for the SIH structure and existing SWARA presentation material where relevant.
+The current SENTINELS 1.0 edited logo extracted from the supplied PPT is included on the cover.
+NOTE: Scope boundary No unsupported clinical accuracy, dataset size, government integration, diagnosis capability, or production readiness has been invented. Exact UI button labels, endpoint names and some implementation details are explicitly marked as proposed where the source material does not define them.

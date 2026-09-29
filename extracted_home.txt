@@ -1,0 +1,248 @@
+Created At: 2026-09-27T22:12:32Z
+Completed At: 2026-09-27T22:12:32Z
+File Path: `file:///Users/macbookair/Documents/swara1/frontend/src/pages/professional/Home.tsx`
+Total Lines: 240
+Total Bytes: 16285
+Showing lines 1 to 240
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: import { Link, useNavigate } from 'react-router-dom';
+2: import { useState, useEffect } from 'react';
+3: import { useAuth } from '../../context/AuthContext';
+4: import { Home as HomeIcon, Users, Bell, Calendar, FileText, BookOpen, Brain, Activity, Settings, User, ChevronRight, PlusCircle, AlertCircle, Clock, FileDown, ShieldAlert } from 'lucide-react';
+5: import api from '../../api';
+6: import { LogoutButton } from '../../components/LogoutButton';
+7: 
+8: interface CheckIn {
+9:   id: number;
+10:   case_id: number;
+11:   distress_level: number;
+12:   sleep_quality: number;
+13:   activity_level: number;
+14:   support_priority: string;
+15:   timestamp: string;
+16:   survivor_alias?: string;
+17: }
+18: 
+19: export default function ProfessionalHome() {
+20:   const { user } = useAuth();
+21:   const navigate = useNavigate();
+22:   const [checkins, setCheckins] = useState<CheckIn[]>([]);
+23:   const [appointments, setAppointments] = useState<any[]>([]);
+24: 
+25:   useEffect(() => {
+26:     if (user && user.role === 'PROFESSIONAL') {
+27:       // Fetch cases & checkins
+28:       api.get(`/cases/`).then(async res => {
+29:         const cases = res.data;
+30:         const allCheckins = [];
+31:         for (const c of cases) {
+32:           try {
+33:             const cRes = await api.get(`/checkins/${c.id}`);
+34:             if (cRes.data.length > 0) {
+35:               const latest = cRes.data[0];
+36:               latest.survivor_alias = c.survivor_alias;
+37:               allCheckins.push(latest);
+38:             }
+39:           } catch (e) {
+40:             console.error(e);
+41:           }
+42:         }
+43:         allCheckins.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+44:         setCheckins(allCheckins);
+45:       }).catch(err => console.error(err));
+46: 
+47:       // Fetch appointments
+48:       api.get('/appointments/').then(res => {
+49:         setAppointments(res.data.filter((a: any) => a.status === 'SCHEDULED'));
+50:       }).catch(err => console.error(err));
+51:     }
+52:   }, [user]);
+53: 
+54:   const priorityCounts = checkins.reduce((acc, ci) => {
+55:     acc[ci.support_priority] = (acc[ci.support_priority] || 0) + 1;
+56:     return acc;
+57:   }, {} as Record<string, number>);
+58: 
+59:   return (
+60:     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
+61:       <aside className="w-full md:w-64 bg-slate-900 text-slate-300 flex flex-col sticky top-0 h-screen overflow-y-auto hidden md:flex">
+62:         <div className="flex items-center gap-3 p-6 border-b border-slate-800">
+63:           <img src="/logo.png" alt="Logo" className="w-10 h-10 rounded-md bg-white p-1" />
+64:           <div className="font-bold text-2xl text-white tracking-tight">SWARA</div>
+65:         </div>
+66:         
+67:         <nav className="flex-1 py-6 px-3 flex flex-col gap-1">
+68:           <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 px-3">Main</div>
+69:           <Link to="/professional/dashboard" className="flex items-center gap-3 px-3 py-2 bg-accent-blue/10 text-accent-blue rounded-lg font-medium"><HomeIcon className="w-5 h-5"/> Home</Link>
+70:           <Link to="/professional/cases" className="flex items-center gap-3 px-3 py-2 hover:bg-slate-800 hover:text-white rounded-lg transition-colors"><Users className="w-5 h-5"/> Cases</Link>
+71:           <Link to="/professional/alerts" className="flex items-center gap-3 px-3 py-2 hover:bg-slate-800 hover:text-white rounded-lg transition-colors"><ShieldAlert className="w-5 h-5"/> Safety Queue</Link>
+72:           <Link to="/professional/appointments" className="flex items-center gap-3 px-3 py-2 hover:bg-slate-800 hover:text-white rounded-lg transition-colors"><Calendar className="w-5 h-5"/> Appointments</Link>
+73:           <Link to="/professional/reports" className="flex items-center gap-3 px-3 py-2 hover:bg-slate-800 hover:text-white rounded-lg transition-colors"><FileText className="w-5 h-5"/> Reports</Link>
+74:           
+75:           <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-6 mb-2 px-3">Tools</div>
+76:           <Link to="/professional/referral" className="flex items-center gap-3 px-3 py-2 hover:bg-slate-800 hover:text-white rounded-lg transition-colors"><BookOpen className="w-5 h-5"/> Add Case</Link>
+77:           <Link to="/professional/audit" className="flex items-center gap-3 px-3 py-2 hover:bg-slate-800 hover:text-white rounded-lg transition-colors"><Activity className="w-5 h-5"/> Activity & Audit</Link>
+78:         </nav>
+79:         
+80:         <div className="p-4 border-t border-slate-800">
+81:           <Link to="/professional/settings" className="flex items-center gap-3 px-3 py-2 hover:bg-slate-800 hover:text-white rounded-lg transition-colors"><Settings className="w-5 h-5"/> Settings</Link>
+82:           <Link to="/professional/profile" className="flex items-center gap-3 px-3 py-2 hover:bg-slate-800 hover:text-white rounded-lg transition-colors"><User className="w-5 h-5"/> Profile</Link>
+83:           <LogoutButton className="flex items-center gap-3 px-3 py-2 text-red-400 hover:bg-red-400/10 hover:text-red-300 rounded-lg transition-colors w-full mt-2" />
+84:         </div>
+85:       </aside>
+86: 
+87:       <main className="flex-1 p-6 md:p-10 max-h-screen overflow-y-auto">
+88:         <header className="flex justify-between items-center mb-8">
+89:           <div>
+90:             <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Good morning, {user?.full_name?.split(' ')[0] || 'Professional'}</h1>
+91:             <p className="text-slate-500 mt-1">Here is the current overview of your practice.</p>
+92:           </div>
+93:           <div className="flex items-center gap-4">
+94:             <button onClick={() => navigate('/professional/alerts')} className="p-2 text-slate-400 hover:bg-slate-100 rounded-full transition-colors relative">
+95:               <Bell className="w-6 h-6" />
+96:               {priorityCounts['HIGH PRIORITY'] > 0 && <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-slate-50"></span>}
+97:             </button>
+98:             <div className="w-10 h-10 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold shadow-inner">
+99:               {user?.full_name ? user.full_name[0] : 'P'}
+100:             </div>
+101:           </div>
+102:         </header>
+103: 
+104:         {/* Quick Actions Bar */}
+105:         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-8 flex gap-4 overflow-x-auto">
+106:             <button onClick={() => navigate('/professional/referral')} className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-sm font-medium transition-colors whitespace-nowrap">
+107:                 <PlusCircle className="w-4 h-4" /> Add New Case
+108:             </button>
+109:             <button onClick={() => navigate('/professional/appointments')} className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-sm font-medium transition-colors whitespace-nowrap">
+110:                 <Calendar className="w-4 h-4" /> Add Appointment
+111:             </button>
+112:             <button onClick={() => navigate('/professional/reports')} className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-sm font-medium transition-colors whitespace-nowrap">
+113:                 <FileDown className="w-4 h-4" /> Export Cases
+114:             </button>
+115:         </div>
+116: 
+117:         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+118:             <div className="lg:col-span-2 space-y-8">
+119:                 {/* Priority Summary Cards */}
+120:                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+121:                 <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+122:                     <div className="text-sm font-medium text-slate-500 mb-1">Active Cases</div>
+123:                     <div className="text-3xl font-bold text-slate-800">{checkins.length}</div>
+124:                 </div>
+125:                 <div className="bg-red-50 p-5 rounded-xl border border-red-100 shadow-sm">
+126:                     <div className="text-sm font-medium text-red-600 mb-1">Critical</div>
+127:                     <div className="text-3xl font-bold text-red-700">{priorityCounts['HIGH PRIORITY'] || 0}</div>
+128:                 </div>
+129:                 <div className="bg-orange-50 p-5 rounded-xl border border-orange-100 shadow-sm">
+130:                     <div className="text-sm font-medium text-orange-600 mb-1">Elevated</div>
+131:                     <div className="text-3xl font-bold text-orange-700">{priorityCounts['ELEVATED'] || 0}</div>
+132:                 </div>
+133:                 <div className="bg-green-50 p-5 rounded-xl border border-green-100 shadow-sm">
+134:                     <div className="text-sm font-medium text-green-600 mb-1">Stable</div>
+135:                     <div className="text-3xl font-bold text-green-700">{priorityCounts['STABLE'] || 0}</div>
+136:                 </div>
+137:                 </div>
+138:                 
+139:                 {/* Needs Attention Queue */}
+140:                 {priorityCounts['HIGH PRIORITY'] > 0 && (
+141:                 <div className="bg-red-50 border-l-4 border-red-500 p-5 rounded-r-xl shadow-sm">
+142:                     <h2 className="text-red-800 font-bold mb-2 flex items-center gap-2">
+143:                     <AlertCircle className="w-5 h-5"/> Action Required: Safety Queue
+144:                     </h2>
+145:                     <p className="text-red-700 text-sm mb-4">You have {priorityCounts['HIGH PRIORITY']} case(s) requiring immediate review due to critical distress signals or missed check-ins.</p>
+146:                     <button onClick={() => navigate('/professional/alerts')} className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-red-700 transition">Review Safety Queue</button>
+147:                 </div>
+148:                 )}
+149: 
+150:                 {/* Recent Case Changes */}
+151:                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+152:                     <div className="p-5 border-b border-slate-200 flex justify-between items-center bg-slate-50/50">
+153:                         <h2 className="font-bold text-slate-800 text-lg flex items-center gap-2">
+154:                             <Activity className="w-5 h-5 text-accent-blue" /> Recent Case Updates
+155:                         </h2>
+156:                         <button onClick={() => navigate('/professional/cases')} className="text-sm text-accent-blue font-medium hover:underline">View All Cases</button>
+157:                     </div>
+158:                     <div className="divide-y divide-slate-100">
+159:                         {checkins.length === 0 && (
+160:                             <div className="p-8 text-center text-slate-500">No cases found. Start by adding a referral.</div>
+161:                         )}
+162:                         {checkins.slice(0, 5).map((ci) => (
+163:                             <div key={ci.id} className="p-5 hover:bg-slate-50/50 transition-colors flex items-center justify-between">
+164:                                 <div>
+165:                                     <div className="font-bold text-slate-900">{ci.survivor_alias || 'Unknown'} (SW-{ci.case_id})</div>
+166:                                     <div className="text-sm text-slate-500 mt-1 flex items-center gap-2">
+167:                                         <Clock className="w-3 h-3" /> {new Date(ci.timestamp).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit' })}
+168:                                     </div>
+169:                                 </div>
+170:                                 <div className="flex items-center gap-4">
+171:                                     <span className={`px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full ${
+172:                                         ci.support_priority === 'HIGH PRIORITY' ? 'bg-red-100 text-red-700 border border-red-200' :
+173:                                         ci.support_priority === 'ELEVATED' ? 'bg-orange-100 text-orange-700 border border-orange-200' :
+174:                                         ci.support_priority === 'OBSERVE' ? 'bg-yellow-100 text-yellow-700 border border-yellow-200' :
+175:                                         'bg-green-100 text-green-700 border border-green-200'
+176:                                     }`}>
+177:                                         {ci.support_priority}
+178:                                     </span>
+179:                                     <Link to={`/professional/case/${ci.case_id}`} className="text-accent-blue text-sm font-semibold hover:text-blue-700 transition-colors flex items-center">
+180:                                         Review <ChevronRight className="w-4 h-4" />
+181:                                     </Link>
+182:                                 </div>
+183:                             </div>
+184:                         ))}
+185:                     </div>
+186:                 </div>
+187:             </div>
+188: 
+189:             <div className="space-y-8">
+190:                 {/* AI Daily Summary */}
+191:                 <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl border border-indigo-100 shadow-sm overflow-hidden">
+192:                     <div className="p-5 border-b border-indigo-100/50">
+193:                         <h2 className="font-bold text-indigo-900 flex items-center gap-2">
+194:                             <Brain className="w-5 h-5 text-indigo-600" /> Daily AI Synthesis
+195:                         </h2>
+196:                     </div>
+197:                     <div className="p-5 text-sm text-indigo-900 leading-relaxed space-y-3">
+198:                         <p><strong>Practice Overview:</strong> Your caseload stability has improved by 12% over the last 7 days. However, sleep disruption remains a widespread issue across 4 cases.</p>
+199:                         <p><strong>Recommendation:</strong> Consider distributing sleep-hygiene materials or scheduling check-ins regarding rest patterns for elevated cases.</p>
+200:                     </div>
+201:                 </div>
+202: 
+203:                 {/* Upcoming Appointments */}
+204:                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+205:                     <div className="p-5 border-b border-slate-200">
+206:                         <h2 className="font-bold text-slate-800 flex items-center gap-2">
+207:                             <Calendar className="w-5 h-5 text-slate-500" /> Today's Schedule
+208:                         </h2>
+209:                     </div>
+210:                     <div className="divide-y divide-slate-100">
+211:                         {appointments.length === 0 && (
+212:                             <div className="p-5 text-sm text-slate-500 text-center">No appointments scheduled for today.</div>
+213:                         )}
+214:                         {appointments.slice(0, 4).map((apt, idx) => (
+215:                             <div key={idx} className="p-4 flex gap-4 hover:bg-slate-50/50 transition-colors">
+216:                                 <div className="flex flex-col items-center justify-center w-12 h-12 bg-slate-100 rounded-lg text-slate-600 flex-shrink-0">
+217:                                     <span className="text-xs font-bold uppercase">{new Date(apt.scheduled_time).toLocaleString(undefined, { weekday: 'short' })}</span>
+218:                                     <span className="text-lg font-bold leading-none">{new Date(apt.scheduled_time).getDate()}</span>
+219:                                 </div>
+220:                                 <div>
+221:                                     <div className="font-semibold text-slate-900 text-sm">{apt.title}</div>
+222:                                     <div className="text-xs text-slate-500 mt-1 flex items-center gap-1">
+223:                                         <Clock className="w-3 h-3" /> {new Date(apt.scheduled_time).toLocaleTimeString(undefined, { hour: '2-digit', minute:'2-digit' })} • {apt.type}
+224:                                     </div>
+225:                                     <Link to={`/professional/case/${apt.case_id}`} className="text-xs text-accent-blue font-medium hover:underline mt-1 inline-block">Case #{apt.case_id}</Link>
+226:                                 </div>
+227:                             </div>
+228:                         ))}
+229:                     </div>
+230:                     <div className="p-3 border-t border-slate-100 bg-slate-50 text-center">
+231:                         <button onClick={() => navigate('/professional/appointments')} className="text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors">View Full Calendar</button>
+232:                     </div>
+233:                 </div>
+234:             </div>
+235:         </div>
+236:       </main>
+237:     </div>
+238:   );
+239: }
+240: 
+The above content shows the entire, complete file contents of the requested file.

@@ -1,0 +1,21 @@
+# SWARA Backend Dependencies
+# These are installed into the Vercel Python runtime.
+# Keep versions pinned so production builds are reproducible.
+
+fastapi==0.141.1
+uvicorn[standard]==0.54.0
+sqlalchemy==2.1.1
+alembic==1.20.0
+passlib[bcrypt]==1.7.4
+pyjwt==2.15.0
+python-dotenv==1.0.0
+pydantic==2.13.5
+pydantic-settings==2.7.0
+requests==2.34.2
+python-multipart==0.0.20
+
+# PostgreSQL driver (required in production)
+psycopg2-binary==2.9.10
+
+# ASGI adapter — required for Vercel Python serverless
+mangum==0.19.0
