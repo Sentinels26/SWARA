@@ -20,6 +20,7 @@ export default function CaseWorkspace() {
   const [interventions, setInterventions] = useState<any[]>([]);
   const [appointments, setAppointments] = useState<any[]>([]);
   const [safetyPlan, setSafetyPlan] = useState<any>(null);
+  const [conversationInsights, setConversationInsights] = useState<any>(null);
   
   const [error, setError] = useState<string | null>(null);
 
@@ -38,11 +39,18 @@ export default function CaseWorkspace() {
   const fetchCaseData = async () => {
     try {
       setError(null);
-      const res = await api.get(`/cases/detail/${id}`);
+      const res = await api.get(`/api/cases/detail/${id}`);
       setCaseData(res.data);
       
-      const analysisRes = await api.get(`/analysis/${id}`);
+      const analysisRes = await api.get(`/api/analysis/${id}`);
       setAiAnalysisList(analysisRes.data);
+
+      try {
+        const insightsRes = await api.get(`/api/conversations/insights/${id}`);
+        setConversationInsights(insightsRes.data);
+      } catch(err) {
+        console.warn("Failed to fetch conversation insights");
+      }
 
       const evRes = await api.get(`/api/cases/${id}/events`);
       setEvents(evRes.data);
@@ -50,10 +58,10 @@ export default function CaseWorkspace() {
       const intRes = await api.get(`/api/cases/${id}/interventions`);
       setInterventions(intRes.data);
       
-      const planRes = await api.get(`/safety-plan/${id}`);
+      const planRes = await api.get(`/api/safety-plan/${id}`);
       setSafetyPlan(planRes.data);
 
-      const aptRes = await api.get(`/appointments/`);
+      const aptRes = await api.get(`/api/appointments/`);
       setAppointments(aptRes.data.filter((a: any) => a.case_id === Number(id)));
 
     } catch (err: any) {
@@ -276,9 +284,63 @@ export default function CaseWorkspace() {
             )}
 
             {activeTab === 'ai' && (
-                <div className="space-y-6">
-                    <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2"><Brain className="text-accent-blue" /> AI Analysis History</h2>
-                    {aiAnalysisList.length === 0 && <p className="text-slate-500">No analysis available yet.</p>}
+                <div className="space-y-8">
+                    {/* Professional Conversation Insights */}
+                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div className="bg-blue-50 border-b border-blue-100 p-4">
+                            <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                <Brain className="text-blue-600 w-5 h-5" /> AI-Assisted Conversation Insights
+                            </h2>
+                            <p className="text-xs text-slate-500 mt-1 uppercase tracking-wider font-semibold">
+                                AI-assisted support prioritisation — not a diagnosis. Professional review required.
+                            </p>
+                        </div>
+                        <div className="p-6 space-y-6">
+                            {conversationInsights?.patterns && conversationInsights.patterns.length > 0 ? (
+                                <div>
+                                    <h3 className="text-sm font-bold text-slate-700 mb-3">Repeated/Sustained Patterns</h3>
+                                    <div className="grid gap-3">
+                                        {conversationInsights.patterns.map((p: any) => (
+                                            <div key={p.id} className="bg-slate-50 border border-slate-100 p-3 rounded-lg flex items-center justify-between">
+                                                <div>
+                                                    <span className="font-semibold text-slate-800 text-sm">{p.domain}</span>
+                                                    <span className="text-slate-500 text-sm ml-2">- {p.direction}</span>
+                                                    <div className="text-xs text-slate-400 mt-1">{p.observation}</div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="text-xs font-semibold bg-blue-100 text-blue-700 px-2 py-0.5 rounded inline-block">Occurrences: {p.occurrence_count}</div>
+                                                    {p.requires_review && <div className="text-xs font-semibold bg-orange-100 text-orange-700 px-2 py-0.5 rounded inline-block ml-2">Needs Review</div>}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ) : (
+                                <p className="text-slate-500 text-sm">No sustained longitudinal patterns detected yet.</p>
+                            )}
+
+                            {conversationInsights?.recent_signals && conversationInsights.recent_signals.length > 0 && (
+                                <div>
+                                    <h3 className="text-sm font-bold text-slate-700 mb-3">Recent Conversation Signals</h3>
+                                    <div className="grid gap-2">
+                                        {conversationInsights.recent_signals.map((sig: any, idx: number) => (
+                                            <div key={idx} className="flex gap-3 text-sm items-center py-2 border-b border-slate-50 last:border-0">
+                                                <div className={`w-2 h-2 rounded-full ${sig.direction === 'worsened' ? 'bg-red-400' : sig.direction === 'improved' ? 'bg-green-400' : 'bg-slate-300'}`}></div>
+                                                <div className="font-medium text-slate-700 w-24">{sig.domain}</div>
+                                                <div className="text-slate-500 flex-1">{sig.observation}</div>
+                                                <div className="text-xs text-slate-400">{new Date(sig.timestamp).toLocaleDateString()}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div>
+                        <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2"><FileText className="text-slate-400 w-5 h-5" /> AI Analysis History</h2>
+                        {aiAnalysisList.length === 0 && <p className="text-slate-500">No analysis available yet.</p>}
+                    </div>
                     {aiAnalysisList.map(analysis => (
                         <div key={analysis.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mb-6">
                             <div className="bg-slate-50 border-b border-slate-200 p-4 flex justify-between items-center">

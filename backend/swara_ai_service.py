@@ -84,8 +84,8 @@ class SwaraAIService:
         self.db.refresh(ai_msg)
 
         # Offload conversation analysis to background — do NOT block the response
-        if background_tasks is not None:
-            background_tasks.add_task(self._background_analyze, active_conv.id, case.id)
+        # Perform analysis synchronously (Vercel safe)
+        self.analyzeConversation(active_conv, case)
         
         return ai_msg
 
@@ -133,11 +133,33 @@ class SwaraAIService:
         self.updatePatterns(case, signals)
         
     def extractSignals(self, active_conv: models.AIConversation) -> List[Dict[str, Any]]:
-        # In a real implementation, we would query the LLM to extract signals from recent messages
-        # For prototype fallback if not using real LLM:
-        signals = []
+        """Extract structured signals from the recent conversation using the LLM.
+        Returns a list of signal dicts matching the SignalExtractionOutput schema.
+        """
+        # Fetch recent messages (up to 10) for context
+        recent_msgs = self.db.query(models.AIMessage).filter(
+            models.AIMessage.conversation_id == active_conv.id
+        ).order_by(models.AIMessage.timestamp.desc()).limit(10).all()
+        history = [{"role": m.sender_role, "text": m.message} for m in reversed(recent_msgs)]
         
-        # Save to AIConversationSummary
+        # Prompt for signal extraction
+        user_prompt = (
+            "Extract a list of wellbeing signals from the recent conversation. "
+            "Each signal should be a JSON object with the following fields: "
+            "domain (e.g., 'Emotion', 'Sleep'), observation (brief description), "
+            "direction ('improved', 'worsened', or 'stable'), timeframe (e.g., 'last week'), "
+            "source ('user'), certainty (e.g., 'high'), requires_review (boolean). "
+            "Return ONLY a JSON array of these signal objects."
+        )
+        try:
+            response_text = self.provider.chat(user_prompt, history, {"conversation_id": active_conv.id})
+            # Attempt to parse JSON; the LLM may include stray markup
+            signals = json.loads(response_text)
+        except Exception as e:
+            logger.error(f"[SwaraAIService] Signal extraction failed: {e}")
+            signals = []
+        
+        # Persist summary
         summary = models.AIConversationSummary(
             case_id=active_conv.case_id,
             conversation_id=active_conv.id,
@@ -152,14 +174,114 @@ class SwaraAIService:
         return signals
 
     def evaluateSafetySignals(self, active_conv: models.AIConversation) -> Dict[str, Any]:
-        return {
-            "is_immediate_concern": False,
-            "safety_note": "No immediate concern detected.",
-            "recommended_priority": "STABLE"
-        }
+        """Safer structured safety evaluation using LLM context instead of naive keywords."""
+        recent_user_msgs = self.db.query(models.AIMessage).filter(
+            models.AIMessage.conversation_id == active_conv.id,
+            models.AIMessage.sender_role == "user"
+        ).order_by(models.AIMessage.timestamp.desc()).limit(3).all()
+        
+        if not recent_user_msgs:
+            return {"is_immediate_concern": False, "safety_note": "No user messages", "recommended_priority": "STABLE", "requires_review": False}
+        
+        history = [{"role": m.sender_role, "text": m.message} for m in reversed(recent_user_msgs)]
+        
+        # Use LLM provider to evaluate safety
+        prompt = (
+            "Evaluate the safety context of the recent user statements. "
+            "Distinguish between: explicit personal immediate safety concern (e.g. active self-harm plan), "
+            "general discussion, third-person discussion, historical mention, or ambiguous statement. "
+            "Return a JSON object with: 'is_immediate_concern' (boolean, ONLY true if explicit personal immediate safety concern), "
+            "'safety_note' (string explanation), 'requires_review' (boolean, true for ambiguous or concerning non-immediate statements). "
+        )
+        
+        try:
+            response_text = self.provider.chat(prompt, history, {"task": "safety_evaluation"})
+            eval_result = json.loads(response_text)
+            
+            is_immediate = eval_result.get("is_immediate_concern", False)
+            return {
+                "is_immediate_concern": is_immediate,
+                "safety_note": eval_result.get("safety_note", "No immediate concern detected."),
+                "recommended_priority": "IMMEDIATE_SAFETY_CONCERN" if is_immediate else "STABLE",
+                "requires_review": eval_result.get("requires_review", False)
+            }
+        except Exception as e:
+            logger.error(f"[SwaraAIService] Safety evaluation failed: {e}")
+            return {
+                "is_immediate_concern": False,
+                "safety_note": "Safety evaluation failed to parse. Review recommended.",
+                "recommended_priority": "STABLE",
+                "requires_review": True
+            }
 
     def updatePatterns(self, case: models.Case, signals: List[Dict[str, Any]]):
-        pass
+        """Longitudinal aggregation of signals. Store patterns in CaseEvent."""
+        logger.info(f"[SwaraAIService] Updating patterns for case {case.id} with {len(signals)} signals")
+        if not signals:
+            return
+            
+        recent_summaries = self.db.query(models.AIConversationSummary).filter(
+            models.AIConversationSummary.case_id == case.id
+        ).order_by(models.AIConversationSummary.created_at.desc()).limit(10).all()
+        
+        all_past_signals = []
+        for s in recent_summaries:
+            try:
+                parsed = json.loads(s.structured_summary)
+                if "signals" in parsed and parsed["signals"]:
+                    all_past_signals.extend(parsed["signals"])
+            except Exception:
+                continue
+                
+        from collections import defaultdict
+        pattern_tally = defaultdict(int)
+        for sig in all_past_signals:
+            domain = sig.get("domain", "")
+            direction = sig.get("direction", "")
+            if domain and direction:
+                pattern_tally[(domain, direction)] += 1
+                
+        for sig in signals:
+            domain = sig.get("domain", "")
+            direction = sig.get("direction", "")
+            if domain and direction:
+                count = pattern_tally.get((domain, direction), 0)
+                if count >= 2:
+                    pattern_desc = f"Repeated/Sustained signal pattern: {domain} ({direction})"
+                    
+                    # Check if already logged recently
+                    recent_event = self.db.query(models.CaseEvent).filter(
+                        models.CaseEvent.case_id == case.id,
+                        models.CaseEvent.category == "LONGITUDINAL_PATTERN",
+                        models.CaseEvent.description.like(f"%{domain}%")
+                    ).first()
+                    
+                    if not recent_event:
+                        event = models.CaseEvent(
+                            case_id=case.id,
+                            category="LONGITUDINAL_PATTERN",
+                            description=json.dumps({
+                                "pattern": pattern_desc,
+                                "domain": domain,
+                                "direction": direction,
+                                "occurrence_count": count,
+                                "timeframe": "Recent conversations",
+                                "requires_review": sig.get("requires_review", False)
+                            }),
+                            is_relevant=True
+                        )
+                        self.db.add(event)
+                    else:
+                        try:
+                            desc = json.loads(recent_event.description)
+                            desc["occurrence_count"] = count
+                            desc["requires_review"] = sig.get("requires_review", False) or desc.get("requires_review", False)
+                            recent_event.description = json.dumps(desc)
+                            recent_event.timestamp = datetime.utcnow()
+                        except Exception:
+                            pass
+                            
+                    self.db.commit()
 
     def generateWeeklySummary(self, case: models.Case) -> Dict[str, Any]:
         return {

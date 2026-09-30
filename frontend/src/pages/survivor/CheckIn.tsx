@@ -24,9 +24,9 @@ export default function CheckIn() {
   const totalSteps = 4; // Mood, Sleep, Energy, Notes
 
   useEffect(() => {
-    api.get(`/cases/`).then((res: any) => {
+    api.get(`/api/cases/`).then((res: any) => {
       if (res.data.length > 0) {
-        api.get(`/cases/detail/${res.data[0].id}`).then((detailRes) => {
+        api.get(`/api/cases/detail/${res.data[0].id}`).then((detailRes) => {
           const checkins = detailRes.data.checkins || [];
           const today = new Date().toISOString().split('T')[0];
           const hasCheckedIn = checkins.some((c: any) => c.date && c.date.startsWith(today));

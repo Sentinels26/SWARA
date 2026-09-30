@@ -1,5 +1,5 @@
 import secrets
-from fastapi import FastAPI, Depends, HTTPException, status, BackgroundTasks
+from fastapi import FastAPI, APIRouter, Depends, HTTPException, status, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -25,6 +25,7 @@ logging.basicConfig(
 
 
 app = FastAPI(title="SWARA API - Secure Foundation")
+api_router = APIRouter(prefix="/api")
 
 # ── CORS ─────────────────────────────────────────────────────────────────────
 # In production set CORS_ORIGINS to your Vercel frontend URL, e.g.:
@@ -66,7 +67,7 @@ def health_check():
 
 # --- AUTHENTICATION ---
 
-@app.post("/api/auth/register", response_model=schemas.UserOut)
+@api_router.post("/auth/register", response_model=schemas.UserOut)
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.email == user.email).first()
     if db_user:
@@ -104,7 +105,7 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     log_audit(db, "USER_REGISTERED", f"Role: {user.role}", new_user.id)
     return new_user
 
-@app.post("/api/auth/login", response_model=schemas.Token)
+@api_router.post("/auth/login", response_model=schemas.Token)
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == form_data.username).first()
     if not user or not auth.verify_password(form_data.password, user.hashed_password):
@@ -116,20 +117,20 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     log_audit(db, "USER_LOGIN", "Successful login", user.id)
     return {"access_token": access_token, "token_type": "bearer"}
 
-@app.post("/api/auth/logout")
+@api_router.post("/auth/logout")
 def logout(token_data: dict = Depends(auth.get_current_user_token)):
     # In a fully stateless JWT setup without a blacklist, the client destroys the token.
     # This endpoint confirms the backend received the logout event (useful for audit logging).
     return {"message": "Successfully logged out"}
 
-@app.get("/api/auth/me", response_model=schemas.UserOut)
+@api_router.get("/auth/me", response_model=schemas.UserOut)
 def read_users_me(token_data: dict = Depends(auth.get_current_user_token), db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.id == token_data["user_id"]).first()
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
-@app.put("/api/auth/me/profile", response_model=schemas.SurvivorProfileOut)
+@api_router.put("/auth/me/profile", response_model=schemas.SurvivorProfileOut)
 def update_user_profile(profile: schemas.SurvivorProfileUpdate, token_data: dict = Depends(auth.get_current_user_token), db: Session = Depends(get_db)):
     if token_data["role"] != "SURVIVOR":
         raise HTTPException(status_code=403, detail="Only survivors can update their survivor profile via this endpoint")
@@ -166,7 +167,7 @@ def update_user_profile(profile: schemas.SurvivorProfileUpdate, token_data: dict
     return surv_profile
 
 # --- REFERRALS ---
-@app.post("/api/referrals/", response_model=schemas.ReferralOut)
+@api_router.post("/referrals/", response_model=schemas.ReferralOut)
 def create_referral(token_data: dict = Depends(auth.get_current_user_token), db: Session = Depends(get_db)):
     if token_data["role"] != "PROFESSIONAL":
         raise HTTPException(status_code=403, detail="Only professionals can create referrals")
@@ -182,7 +183,7 @@ def create_referral(token_data: dict = Depends(auth.get_current_user_token), db:
 
 # --- CASES ---
 
-@app.get("/cases/", response_model=List[schemas.CaseOut])
+@api_router.get("/cases/", response_model=List[schemas.CaseOut])
 def read_cases(token_data: dict = Depends(auth.get_current_user_token), db: Session = Depends(get_db)):
     if token_data["role"] == "PROFESSIONAL":
         return db.query(models.Case).filter(models.Case.professional_id == token_data["user_id"]).all()
@@ -190,7 +191,7 @@ def read_cases(token_data: dict = Depends(auth.get_current_user_token), db: Sess
         return db.query(models.Case).filter(models.Case.survivor_id == token_data["user_id"]).all()
     return []
 
-@app.get("/cases/detail/{case_id}")
+@api_router.get("/cases/detail/{case_id}")
 def get_case_detail(case_id: int, token_data: dict = Depends(auth.get_current_user_token), db: Session = Depends(get_db)):
     case = db.query(models.Case).filter(models.Case.id == case_id).first()
     if not case:
@@ -216,7 +217,7 @@ def get_case_detail(case_id: int, token_data: dict = Depends(auth.get_current_us
     }
 
 # --- CONSENT ---
-@app.post("/consents/", response_model=schemas.ConsentOut)
+@api_router.post("/consents/", response_model=schemas.ConsentOut)
 def update_consent(consent: schemas.ConsentCreate, case_id: int, token_data: dict = Depends(auth.get_current_user_token), db: Session = Depends(get_db)):
     if token_data["role"] != "SURVIVOR":
         raise HTTPException(status_code=403, detail="Only survivors can set consent")
@@ -238,7 +239,7 @@ def update_consent(consent: schemas.ConsentCreate, case_id: int, token_data: dic
     return db_consent
 
 # --- ASSESSMENT & BASELINE ---
-@app.post("/baselines/", response_model=schemas.BaselineOut)
+@api_router.post("/baselines/", response_model=schemas.BaselineOut)
 def create_baseline(baseline: schemas.BaselineCreate, case_id: int, token_data: dict = Depends(auth.get_current_user_token), db: Session = Depends(get_db)):
     if token_data["role"] != "SURVIVOR":
         raise HTTPException(status_code=403, detail="Only survivors can set baseline")
@@ -289,8 +290,7 @@ def calculate_priority_and_why(distress: int, sleep: int, baseline: models.Basel
         
     return priority, " ".join(why)
 
-def process_ai_analysis(case_id: int, checkin_id: int, checkin_data: dict, baseline_data: dict, recent_checkins: list, priority: str, why: str):
-    db = SessionLocal()
+def process_ai_analysis(case_id: int, checkin_id: int, checkin_data: dict, baseline_data: dict, recent_checkins: list, priority: str, why: str, db: Session):
     try:
         analysis = models.AIAnalysis(
             case_id=case_id,
@@ -323,11 +323,12 @@ def process_ai_analysis(case_id: int, checkin_id: int, checkin_data: dict, basel
             analysis.error_info = str(e)
             
         db.commit()
-    finally:
-        db.close()
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Failed to save AI analysis: {e}")
 
-@app.post("/checkins/", response_model=schemas.CheckInOut)
-def create_checkin(checkin: schemas.CheckInCreate, background_tasks: BackgroundTasks, token_data: dict = Depends(auth.get_current_user_token), db: Session = Depends(get_db)):
+@api_router.post("/checkins/", response_model=schemas.CheckInOut)
+def create_checkin(checkin: schemas.CheckInCreate, token_data: dict = Depends(auth.get_current_user_token), db: Session = Depends(get_db)):
     if token_data["role"] != "SURVIVOR":
         raise HTTPException(status_code=403, detail="Only survivors can check in")
         
@@ -384,12 +385,12 @@ def create_checkin(checkin: schemas.CheckInCreate, background_tasks: BackgroundT
     recent_qs = db.query(models.CheckIn).filter(models.CheckIn.case_id == case.id).order_by(models.CheckIn.timestamp.desc()).limit(5).all()
     recent_checkins = [{"distress": r.distress_level, "sleep": r.sleep_quality} for r in recent_qs]
     
-    background_tasks.add_task(process_ai_analysis, case.id, db_checkin.id, checkin_data, baseline_data, recent_checkins, priority, why)
+    process_ai_analysis(case.id, db_checkin.id, checkin_data, baseline_data, recent_checkins, priority, why, db)
     
     log_audit(db, "CHECKIN_SUBMITTED", f"Checkin ID {db_checkin.id} (Priority: {priority})", token_data["user_id"])
     return db_checkin
 
-@app.get("/checkins/{case_id}", response_model=List[schemas.CheckInOut])
+@api_router.get("/checkins/{case_id}", response_model=List[schemas.CheckInOut])
 def read_checkins(case_id: int, token_data: dict = Depends(auth.get_current_user_token), db: Session = Depends(get_db)):
     case = db.query(models.Case).filter(models.Case.id == case_id).first()
     if not case:
@@ -403,7 +404,7 @@ def read_checkins(case_id: int, token_data: dict = Depends(auth.get_current_user
 
 
 # --- SAFETY PLAN ---
-@app.get("/safety-plan/{case_id}", response_model=schemas.SafetyPlanOut)
+@api_router.get("/safety-plan/{case_id}", response_model=schemas.SafetyPlanOut)
 def get_safety_plan(case_id: int, token_data: dict = Depends(auth.get_current_user_token), db: Session = Depends(get_db)):
     case = db.query(models.Case).filter(models.Case.id == case_id).first()
     if not case:
@@ -421,7 +422,7 @@ def get_safety_plan(case_id: int, token_data: dict = Depends(auth.get_current_us
         db.refresh(plan)
     return plan
 
-@app.put("/safety-plan/{case_id}", response_model=schemas.SafetyPlanOut)
+@api_router.put("/safety-plan/{case_id}", response_model=schemas.SafetyPlanOut)
 def update_safety_plan(case_id: int, plan_update: schemas.SafetyPlanCreate, token_data: dict = Depends(auth.get_current_user_token), db: Session = Depends(get_db)):
     case = db.query(models.Case).filter(models.Case.id == case_id).first()
     if not case:
@@ -448,7 +449,7 @@ def update_safety_plan(case_id: int, plan_update: schemas.SafetyPlanCreate, toke
     return plan
 
 # --- AI ANALYSIS ---
-@app.get("/analysis/{case_id}", response_model=List[schemas.AIAnalysisOut])
+@api_router.get("/analysis/{case_id}", response_model=List[schemas.AIAnalysisOut])
 def read_ai_analysis(case_id: int, token_data: dict = Depends(auth.get_current_user_token), db: Session = Depends(get_db)):
     case = db.query(models.Case).filter(models.Case.id == case_id).first()
     if not case:
@@ -460,7 +461,7 @@ def read_ai_analysis(case_id: int, token_data: dict = Depends(auth.get_current_u
         
     return db.query(models.AIAnalysis).filter(models.AIAnalysis.case_id == case_id).order_by(models.AIAnalysis.created_at.desc()).all()
 
-@app.get("/journey/{case_id}/analysis", response_model=schemas.JourneyAnalysisOut)
+@api_router.get("/journey/{case_id}/analysis", response_model=schemas.JourneyAnalysisOut)
 def get_journey_analysis(case_id: int, token_data: dict = Depends(auth.get_current_user_token), db: Session = Depends(get_db)):
     case = db.query(models.Case).filter(models.Case.id == case_id).first()
     if not case:
@@ -473,13 +474,25 @@ def get_journey_analysis(case_id: int, token_data: dict = Depends(auth.get_curre
     baseline = db.query(models.Baseline).filter(models.Baseline.case_id == case_id).first()
     recent_qs = db.query(models.CheckIn).filter(models.CheckIn.case_id == case_id).order_by(models.CheckIn.timestamp.desc()).limit(14).all()
     
-    # Conversations
-    convs = db.query(models.AIConversation).filter(models.AIConversation.case_id == case_id).all()
-    # (Simplified context collection)
+    # Fetch recent conversation signals
+    recent_summaries = db.query(models.AIConversationSummary).filter(
+        models.AIConversationSummary.case_id == case_id
+    ).order_by(models.AIConversationSummary.created_at.desc()).limit(5).all()
     
+    recent_signals = []
+    for s in recent_summaries:
+        try:
+            if s.structured_summary:
+                parsed = json.loads(s.structured_summary)
+                if "signals" in parsed and parsed["signals"]:
+                    recent_signals.extend(parsed["signals"])
+        except Exception:
+            pass
+            
     context = {
         "has_baseline": baseline is not None,
-        "recent_checkins": [{"distress": r.distress_level, "sleep": r.sleep_quality, "activity": r.activity_level} for r in recent_qs]
+        "recent_checkins": [{"distress": r.distress_level, "sleep": r.sleep_quality, "activity": r.activity_level} for r in recent_qs],
+        "recent_conversation_signals": recent_signals
     }
     
     try:
@@ -500,7 +513,7 @@ def get_journey_analysis(case_id: int, token_data: dict = Depends(auth.get_curre
 
 # --- PROFESSIONAL ACTIONS ---
 
-@app.post("/actions/", response_model=schemas.ActionLogOut)
+@api_router.post("/actions/", response_model=schemas.ActionLogOut)
 def log_action(action: schemas.ActionLogCreate, case_id: int, token_data: dict = Depends(auth.get_current_user_token), db: Session = Depends(get_db)):
     if token_data["role"] != "PROFESSIONAL":
         raise HTTPException(status_code=403, detail="Only professionals can log actions")
@@ -521,7 +534,7 @@ def log_action(action: schemas.ActionLogCreate, case_id: int, token_data: dict =
     log_audit(db, "PROFESSIONAL_ACTION", f"{action.action_type} on case {case_id}", token_data["user_id"])
     return db_action
 
-@app.get("/actions/{case_id}", response_model=List[schemas.ActionLogOut])
+@api_router.get("/actions/{case_id}", response_model=List[schemas.ActionLogOut])
 def read_actions(case_id: int, token_data: dict = Depends(auth.get_current_user_token), db: Session = Depends(get_db)):
     case = db.query(models.Case).filter(models.Case.id == case_id).first()
     if not case:
@@ -534,7 +547,7 @@ def read_actions(case_id: int, token_data: dict = Depends(auth.get_current_user_
     return db.query(models.ActionLog).filter(models.ActionLog.case_id == case_id).all()
 
 # --- ALERTS & WORKFLOWS ---
-@app.get("/alerts/", response_model=List[schemas.AlertOut])
+@api_router.get("/alerts/", response_model=List[schemas.AlertOut])
 def get_alerts(token_data: dict = Depends(auth.get_current_user_token), db: Session = Depends(get_db)):
     if token_data["role"] == "PROFESSIONAL":
         cases = db.query(models.Case).filter(models.Case.professional_id == token_data["user_id"]).all()
@@ -546,7 +559,7 @@ def get_alerts(token_data: dict = Depends(auth.get_current_user_token), db: Sess
     case_ids = [c.id for c in cases]
     return db.query(models.Alert).filter(models.Alert.case_id.in_(case_ids)).order_by(models.Alert.timestamp.desc()).all()
 
-@app.post("/alerts/trigger_missed_checkin/{case_id}")
+@api_router.post("/alerts/trigger_missed_checkin/{case_id}")
 def trigger_missed_checkin(case_id: int, db: Session = Depends(get_db)):
     # This simulates a background cron job detecting a missed checkin
     alert = models.Alert(case_id=case_id, alert_type="MISSED_CHECKIN", message="Scheduled check-in missed")
@@ -555,7 +568,7 @@ def trigger_missed_checkin(case_id: int, db: Session = Depends(get_db)):
     log_audit(db, "ALERT_TRIGGERED", f"Missed check-in for case {case_id}", None)
     return {"message": "Missed check-in alert created"}
 
-@app.post("/alerts/trigger_sos/")
+@api_router.post("/alerts/trigger_sos/")
 def trigger_sos(token_data: dict = Depends(auth.get_current_user_token), db: Session = Depends(get_db)):
     if token_data["role"] != "SURVIVOR":
         raise HTTPException(status_code=403, detail="Unauthorized")
@@ -570,7 +583,7 @@ def trigger_sos(token_data: dict = Depends(auth.get_current_user_token), db: Ses
     return {"message": "Emergency protocol activated"}
 
 # --- AI CHAT SYSTEM ---
-@app.post("/chat/conversation", response_model=schemas.AIConversationOut)
+@api_router.post("/chat/conversation", response_model=schemas.AIConversationOut)
 def start_or_get_conversation(token_data: dict = Depends(auth.get_current_user_token), db: Session = Depends(get_db)):
     if token_data["role"] != "SURVIVOR":
         raise HTTPException(status_code=403, detail="Only survivors can chat with SWARA")
@@ -592,7 +605,7 @@ def start_or_get_conversation(token_data: dict = Depends(auth.get_current_user_t
         
     return active_conv
 
-@app.get("/chat/conversation/{conversation_id}/messages", response_model=List[schemas.AIMessageOut])
+@api_router.get("/chat/conversation/{conversation_id}/messages", response_model=List[schemas.AIMessageOut])
 def get_chat_history(conversation_id: int, token_data: dict = Depends(auth.get_current_user_token), db: Session = Depends(get_db)):
     conv = db.query(models.AIConversation).filter(models.AIConversation.id == conversation_id).first()
     if not conv:
@@ -605,7 +618,7 @@ def get_chat_history(conversation_id: int, token_data: dict = Depends(auth.get_c
         
     return db.query(models.AIMessage).filter(models.AIMessage.conversation_id == conversation_id).order_by(models.AIMessage.timestamp.asc()).all()
 
-@app.post("/chat/message", response_model=schemas.AIMessageOut)
+@api_router.post("/chat/message", response_model=schemas.AIMessageOut)
 def send_chat_message(message: schemas.AIMessageCreate, background_tasks: BackgroundTasks, token_data: dict = Depends(auth.get_current_user_token), db: Session = Depends(get_db)):
     if token_data["role"] != "SURVIVOR":
         raise HTTPException(status_code=403, detail="Only survivors can chat with SWARA")
@@ -633,10 +646,66 @@ def send_chat_message(message: schemas.AIMessageCreate, background_tasks: Backgr
     ai_msg = ai_service.chat(message.message, conv, case, background_tasks=background_tasks)
 
     return ai_msg
+    
+# --- PROFESSIONAL CONVERSATION INSIGHTS ---
+@api_router.get("/conversations/insights/{case_id}")
+def get_conversation_insights(case_id: int, token_data: dict = Depends(auth.get_current_user_token), db: Session = Depends(get_db)):
+    if token_data["role"] != "PROFESSIONAL":
+        raise HTTPException(status_code=403, detail="Only professionals can access conversation insights")
+        
+    case = db.query(models.Case).filter(models.Case.id == case_id).first()
+    if not case or case.professional_id != token_data["user_id"]:
+        raise HTTPException(status_code=403, detail="Unauthorized")
+
+    # Fetch longitudinal patterns from CaseEvent
+    patterns = db.query(models.CaseEvent).filter(
+        models.CaseEvent.case_id == case_id,
+        models.CaseEvent.category == "LONGITUDINAL_PATTERN"
+    ).order_by(models.CaseEvent.timestamp.desc()).all()
+    
+    # Fetch latest raw signals from AIConversationSummary for context
+    recent_summaries = db.query(models.AIConversationSummary).filter(
+        models.AIConversationSummary.case_id == case_id
+    ).order_by(models.AIConversationSummary.created_at.desc()).limit(3).all()
+    
+    recent_signals = []
+    for s in recent_summaries:
+        try:
+            if s.structured_summary:
+                parsed = json.loads(s.structured_summary)
+                if "signals" in parsed and parsed["signals"]:
+                    for sig in parsed["signals"]:
+                        sig["timestamp"] = s.created_at
+                        recent_signals.append(sig)
+        except Exception:
+            pass
+            
+    # Format the patterns
+    formatted_patterns = []
+    for p in patterns:
+        try:
+            desc = json.loads(p.description)
+            formatted_patterns.append({
+                "id": p.id,
+                "domain": desc.get("domain"),
+                "observation": desc.get("pattern"),
+                "direction": desc.get("direction"),
+                "occurrence_count": desc.get("occurrence_count"),
+                "timeframe": desc.get("timeframe"),
+                "requires_review": desc.get("requires_review"),
+                "timestamp": p.timestamp
+            })
+        except Exception:
+            pass
+            
+    return {
+        "patterns": formatted_patterns,
+        "recent_signals": recent_signals
+    }
 
 
 # --- APPOINTMENTS ---
-@app.post("/appointments/", response_model=schemas.AppointmentOut)
+@api_router.post("/appointments/", response_model=schemas.AppointmentOut)
 def create_appointment(appt: schemas.AppointmentCreate, token_data: dict = Depends(auth.get_current_user_token), db: Session = Depends(get_db)):
     # Both SURVIVOR and PROFESSIONAL can create appointments
     if token_data["role"] == "PROFESSIONAL":
@@ -683,7 +752,7 @@ def create_appointment(appt: schemas.AppointmentCreate, token_data: dict = Depen
     db.commit()
     return db_appt
 
-@app.put("/appointments/{appt_id}", response_model=schemas.AppointmentOut)
+@api_router.put("/appointments/{appt_id}", response_model=schemas.AppointmentOut)
 def update_appointment(appt_id: int, appt_update: schemas.AppointmentCreate, token_data: dict = Depends(auth.get_current_user_token), db: Session = Depends(get_db)):
     db_appt = db.query(models.Appointment).filter(models.Appointment.id == appt_id).first()
     if not db_appt:
@@ -717,7 +786,7 @@ def update_appointment(appt_id: int, appt_update: schemas.AppointmentCreate, tok
     db.refresh(db_appt)
     return db_appt
 
-@app.patch("/appointments/{appt_id}/status", response_model=schemas.AppointmentOut)
+@api_router.patch("/appointments/{appt_id}/status", response_model=schemas.AppointmentOut)
 def update_appointment_status(appt_id: int, status: str, token_data: dict = Depends(auth.get_current_user_token), db: Session = Depends(get_db)):
     db_appt = db.query(models.Appointment).filter(models.Appointment.id == appt_id).first()
     if not db_appt:
@@ -748,7 +817,7 @@ def update_appointment_status(appt_id: int, status: str, token_data: dict = Depe
     db.refresh(db_appt)
     return db_appt
 
-@app.get("/appointments/", response_model=List[schemas.AppointmentOut])
+@api_router.get("/appointments/", response_model=List[schemas.AppointmentOut])
 
 def get_appointments(token_data: dict = Depends(auth.get_current_user_token), db: Session = Depends(get_db)):
     if token_data["role"] == "PROFESSIONAL":
@@ -982,3 +1051,5 @@ def get_survivor_dashboard(db: Session = Depends(get_db), token_data: dict = Dep
         "recentActivity": recent_checkins
     }
 
+
+app.include_router(api_router)

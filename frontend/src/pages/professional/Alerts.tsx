@@ -29,7 +29,7 @@ export default function ProfessionalAlerts() {
 
   useEffect(() => {
     if (user && user.role === 'PROFESSIONAL') {
-      api.get(`/alerts/`).then(res => setAlerts(res.data)).catch(err => console.error(err));
+      api.get(`/api/alerts/`).then(res => setAlerts(res.data)).catch(err => console.error(err));
     }
   }, [user]);
 

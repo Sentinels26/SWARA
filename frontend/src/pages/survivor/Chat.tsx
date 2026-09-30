@@ -92,13 +92,13 @@ export default function Chat() {
       setChatState({ conversationId: null, messages: [], isInitializing: true, initError: null });
       try {
         // POST to get-or-create an active conversation for this user
-        const convRes = await api.post('/chat/conversation');
+        const convRes = await api.post('/api/chat/conversation');
         if (cancelled) return;
 
         const conversationId: number = convRes.data.id;
 
         // Fetch history strictly for THIS conversation ID
-        const historyRes = await api.get(`/chat/conversation/${conversationId}/messages`);
+        const historyRes = await api.get(`/api/chat/conversation/${conversationId}/messages`);
         if (cancelled) return;
 
         const messages: Message[] =
@@ -135,7 +135,7 @@ export default function Chat() {
   // ─── SOS trigger ───
   const triggerSOS = async (type: string) => {
     try {
-      await api.post('/alerts/trigger_sos/');
+      await api.post('/api/alerts/trigger_sos/');
       setSosStatus(`Alerting ${type}...`);
       setTimeout(() => { setIsSosOpen(false); setSosStatus(''); }, 4000);
     } catch (err) {
@@ -175,7 +175,7 @@ export default function Chat() {
 
     try {
       // Send conversationId in the request body — critical for isolation
-      const res = await api.post('/chat/message', {
+      const res = await api.post('/api/chat/message', {
         conversation_id: conversationId,
         message: userText,
         client_request_id: clientRequestId,

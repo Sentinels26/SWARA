@@ -22,10 +22,10 @@ export default function SurvivorDashboard() {
 
   useEffect(() => {
     if (user && user.role === 'SURVIVOR') {
-      api.get(`/cases/`).then(res => {
+      api.get(`/api/cases/`).then(res => {
         if (res.data.length > 0) {
           const activeCase = res.data[0];
-          api.get(`/checkins/${activeCase.id}`).then(cRes => {
+          api.get(`/api/checkins/${activeCase.id}`).then(cRes => {
             setCheckins(cRes.data);
           });
         }
@@ -37,7 +37,7 @@ export default function SurvivorDashboard() {
 
   const triggerSOS = async (type: string) => {
     try {
-      await api.post('/alerts/trigger_sos/');
+      await api.post('/api/alerts/trigger_sos/');
       setSosStatus(`Alerting ${type}...`);
       setTimeout(() => { setIsSosOpen(false); setSosStatus(''); }, 4000);
     } catch (err) {

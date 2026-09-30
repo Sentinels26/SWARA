@@ -13,7 +13,7 @@ export default function Consent() {
   const handleConsent = async () => {
     setIsSubmitting(true);
     try {
-      const casesRes = await api.get('/cases/');
+      const casesRes = await api.get('/api/cases/');
       if (casesRes.data && casesRes.data.length > 0) {
         const case_id = casesRes.data[0].id;
         await api.post(`/consents/?case_id=${case_id}`, { consent_type: "DATA_PROCESSING", status: "GRANTED" });

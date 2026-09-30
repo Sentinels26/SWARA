@@ -3,7 +3,7 @@ import sqlite3
 import uuid
 
 BASE_URL = "http://localhost:8001"
-DB_PATH = "swara.db"
+DB_PATH = "backend/swara.db"
 results = []
 
 def run_test(name, func):
@@ -61,17 +61,17 @@ def t6_consent():
     res = requests.post(f"{BASE_URL}/api/auth/login", data={"username": state['surv_email'], "password": "pass"})
     state['surv_auth'] = {"Authorization": f"Bearer {res.json()['access_token']}"}
     
-    cases_res = requests.get(f"{BASE_URL}/cases/", headers=state['surv_auth'])
+    cases_res = requests.get(f"{BASE_URL}/api/cases/", headers=state['surv_auth'])
     state['case_id'] = cases_res.json()[0]['id']
     
-    res = requests.post(f"{BASE_URL}/consents/?case_id={state['case_id']}", json={
+    res = requests.post(f"{BASE_URL}/api/consents/?case_id={state['case_id']}", json={
         "consent_type": "DATA_PROCESSING", "status": "GRANTED"
     }, headers=state['surv_auth'])
     return True if res.status_code == 200 else f"{res.status_code}: {res.text}"
 
 def t7_assessment():
     # Same endpoint for assessment and baseline in our impl
-    res = requests.post(f"{BASE_URL}/baselines/?case_id={state['case_id']}", json={
+    res = requests.post(f"{BASE_URL}/api/baselines/?case_id={state['case_id']}", json={
         "avg_distress": 4.0, "avg_sleep": 6.0, "activity_level": "Moderate"
     }, headers=state['surv_auth'])
     return True if res.status_code == 200 else f"{res.status_code}: {res.text}"
@@ -86,7 +86,7 @@ def t8_baseline():
     return True if row else "Baseline not found in DB"
 
 def t9_surv_checkin():
-    res = requests.post(f"{BASE_URL}/checkins/", json={
+    res = requests.post(f"{BASE_URL}/api/checkins/", json={
         "distress_level": 8, "sleep_quality": 3, "activity_level": 4
     }, headers=state['surv_auth'])
     if res.status_code == 200:
@@ -95,7 +95,7 @@ def t9_surv_checkin():
     return f"{res.status_code}: {res.text}"
 
 def t10_persistence():
-    res = requests.get(f"{BASE_URL}/checkins/{state['case_id']}", headers=state['prof_auth'])
+    res = requests.get(f"{BASE_URL}/api/checkins/{state['case_id']}", headers=state['prof_auth'])
     if res.status_code == 200 and len(res.json()) > 0:
         return True
     return "Check-ins not found or inaccessible"
@@ -115,19 +115,19 @@ def t13_why_explanation():
     return True if why and 'Distress is' in why else f"Explanation missing/wrong: {why}"
 
 def t14_prof_dash():
-    res = requests.get(f"{BASE_URL}/cases/", headers=state['prof_auth'])
+    res = requests.get(f"{BASE_URL}/api/cases/", headers=state['prof_auth'])
     if res.status_code == 200 and len(res.json()) > 0:
         return True
     return f"{res.status_code}: {res.text}"
 
 def t15_prof_action():
-    res = requests.post(f"{BASE_URL}/actions/?case_id={state['case_id']}", json={
+    res = requests.post(f"{BASE_URL}/api/actions/?case_id={state['case_id']}", json={
         "action_type": "CONTACT", "notes": "Tested"
     }, headers=state['prof_auth'])
     return True if res.status_code == 200 else f"{res.status_code}: {res.text}"
 
 def t16_alert_creation():
-    res = requests.get(f"{BASE_URL}/alerts/", headers=state['prof_auth'])
+    res = requests.get(f"{BASE_URL}/api/alerts/", headers=state['prof_auth'])
     if res.status_code == 200 and len(res.json()) > 0:
         return True
     return f"{res.status_code}: {res.text}"
@@ -141,15 +141,15 @@ def t17_audit_log():
     return True if row else "Audit log not found in DB"
 
 def t18_unauth_access():
-    res = requests.get(f"{BASE_URL}/cases/detail/{state['case_id']}")
+    res = requests.get(f"{BASE_URL}/api/cases/detail/{state['case_id']}")
     return True if res.status_code == 401 else f"Allowed access with {res.status_code}"
 
 def t19_surv_other_case():
-    res = requests.get(f"{BASE_URL}/cases/detail/1", headers=state['surv_auth'])
+    res = requests.get(f"{BASE_URL}/api/cases/detail/1", headers=state['surv_auth'])
     return True if res.status_code == 403 else f"Status: {res.status_code} {res.text}"
 
 def t20_surv_prof_endpoint():
-    res = requests.post(f"{BASE_URL}/actions/?case_id={state['case_id']}", json={"action_type": "CONTACT", "notes": ""}, headers=state['surv_auth'])
+    res = requests.post(f"{BASE_URL}/api/actions/?case_id={state['case_id']}", json={"action_type": "CONTACT", "notes": ""}, headers=state['surv_auth'])
     return True if res.status_code == 403 else f"Status: {res.status_code} {res.text}"
 
 def t21_prof_unrelated():
@@ -158,7 +158,7 @@ def t21_prof_unrelated():
         "email": f"prof_other_{uuid.uuid4().hex[:6]}@test.com", "password": "pass", "role": "PROFESSIONAL", "full_name": "Other Prof"
     })
     token = requests.post(f"{BASE_URL}/api/auth/login", data={"username": res.json()['email'], "password": "pass"}).json()['access_token']
-    res = requests.get(f"{BASE_URL}/cases/detail/{state['case_id']}", headers={"Authorization": f"Bearer {token}"})
+    res = requests.get(f"{BASE_URL}/api/cases/detail/{state['case_id']}", headers={"Authorization": f"Bearer {token}"})
     return True if res.status_code == 403 else f"Status: {res.status_code} {res.text}"
 
 def t22_expired_referral():

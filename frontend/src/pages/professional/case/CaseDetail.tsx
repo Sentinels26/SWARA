@@ -24,10 +24,10 @@ export default function CaseDetail() {
   const fetchCaseData = async () => {
     try {
       setError(null);
-      const res = await api.get(`/cases/detail/${id}`);
+      const res = await api.get(`/api/cases/detail/${id}`);
       setCaseData(res.data);
       
-      const analysisRes = await api.get(`/analysis/${id}`);
+      const analysisRes = await api.get(`/api/analysis/${id}`);
       setAiAnalysisList(analysisRes.data);
     } catch (err: any) {
       console.error(err);

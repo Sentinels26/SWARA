@@ -15,7 +15,7 @@ export default function Assessment() {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      const casesRes = await api.get('/cases/');
+      const casesRes = await api.get('/api/cases/');
       if (casesRes.data && casesRes.data.length > 0) {
         const case_id = casesRes.data[0].id;
         

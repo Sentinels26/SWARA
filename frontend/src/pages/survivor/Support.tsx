@@ -48,7 +48,7 @@ export default function Support() {
 
   useEffect(() => {
     if (user && user.role === 'SURVIVOR') {
-      api.get(`/cases/`).then((res: any) => {
+      api.get(`/api/cases/`).then((res: any) => {
         if (res.data.length > 0) {
             const caseData = res.data[0];
             setActiveCaseId(caseData.id);
@@ -64,7 +64,7 @@ export default function Support() {
 
   const fetchSafetyPlan = async (caseId: number) => {
     try {
-      const res = await api.get(`/safety-plan/${caseId}`);
+      const res = await api.get(`/api/safety-plan/${caseId}`);
       if (res.data) {
         setWarningSigns(JSON.parse(res.data.warning_signs || "[]"));
         setCopingStrategies(JSON.parse(res.data.coping_strategies || "[]"));
@@ -107,7 +107,7 @@ export default function Support() {
 
   const triggerSOS = async (type: string) => {
     try {
-      await api.post('/alerts/trigger_sos/');
+      await api.post('/api/alerts/trigger_sos/');
       setSosStatus(`Alerting ${type}...`);
       setTimeout(() => { setIsSosOpen(false); setSosStatus(''); }, 4000);
     } catch (err) {

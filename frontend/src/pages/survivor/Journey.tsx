@@ -21,6 +21,7 @@ export default function Journey() {
   const [checkins, setCheckins] = useState<any[]>([]);
   const [baseline, setBaseline] = useState<any>(null);
   const [analysis, setAnalysis] = useState<any>(null);
+  const [reports, setReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   
@@ -39,22 +40,24 @@ export default function Journey() {
 
   useEffect(() => {
     if (user && user.role === 'SURVIVOR') {
-      api.get(`/appointments/`).then((res: any) => setAppointments(res.data)).catch((err: any) => console.error(err));
+      api.get(`/api/appointments/`).then((res: any) => setAppointments(res.data)).catch((err: any) => console.error(err));
       
 
-      api.get(`/cases/`).then((res: any) => {
+      api.get(`/api/cases/`).then((res: any) => {
         if (res.data.length > 0) {
             const caseId = res.data[0].id;
             setActiveCaseId(caseId);
 
             Promise.all([
-                api.get(`/cases/detail/${caseId}`),
-                api.get(`/journey/${caseId}/analysis`)
-            ]).then(([detailRes, analysisRes]) => {
+                api.get(`/api/cases/detail/${caseId}`),
+                api.get(`/api/journey/${caseId}/analysis`),
+                api.get(`/api/analysis/${caseId}`)
+            ]).then(([detailRes, analysisRes, reportsRes]) => {
                 const caseDetail = detailRes.data;
                 setCheckins(caseDetail.checkins.reverse());
                 setBaseline(caseDetail.baseline);
                 setAnalysis(analysisRes.data);
+                setReports(reportsRes.data.slice(0, 3));
                 setLoading(false);
             }).catch(err => {
                 console.error(err);
@@ -108,7 +111,7 @@ export default function Journey() {
 
 
   const loadAppointments = () => {
-    api.get(`/appointments/`).then((res: any) => setAppointments(res.data)).catch((err: any) => console.error(err));
+    api.get(`/api/appointments/`).then((res: any) => setAppointments(res.data)).catch((err: any) => console.error(err));
   };
 
   const handleBookAppointment = async () => {
@@ -119,7 +122,7 @@ export default function Journey() {
     }
     try {
         const scheduled_time = new Date(`${apptDate}T${apptTime}:00`).toISOString();
-        await api.post('/appointments/', {
+        await api.post('/api/appointments/', {
             case_id: activeCaseId,
             scheduled_time,
             title: "Check-in Session",
@@ -134,7 +137,7 @@ export default function Journey() {
   
   const handleCancelAppointment = async (id: number) => {
     try {
-        await api.patch(`/appointments/${id}/status?status=CANCELLED`);
+        await api.patch(`/api/appointments/${id}/status?status=CANCELLED`);
         loadAppointments();
     } catch (err) {
         console.error(err);
@@ -373,44 +376,25 @@ export default function Journey() {
           <h3 className="font-bold text-slate-800 text-sm md:text-base mb-4">Recent Reports</h3>
           
           <div className="flex flex-col gap-3">
-            <div className="bg-white rounded-2xl p-4 md:p-5 shadow-[0_2px_10px_rgb(0,0,0,0.03)] border border-slate-50 flex items-center justify-between">
-              <div className="flex items-center gap-3 md:gap-4">
-                <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
-                  <FileText className="w-4 h-4 md:w-5 md:h-5" />
+            {reports.length === 0 && (
+              <div className="text-center py-8 text-slate-500">No recent reports available.</div>
+            )}
+            {reports.map((report: any) => (
+              <div key={report.id} className="bg-white rounded-2xl p-4 md:p-5 shadow-[0_2px_10px_rgb(0,0,0,0.03)] border border-slate-50 flex items-center justify-between">
+                <div className="flex items-center gap-3 md:gap-4">
+                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
+                    <FileText className="w-4 h-4 md:w-5 md:h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-700 text-xs md:text-sm">Support Priority Summary</h4>
+                    <span className="text-[10px] md:text-xs text-slate-400 block mt-0.5">
+                      {new Date(report.created_at).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })}
+                    </span>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-bold text-slate-700 text-xs md:text-sm">Wellbeing Progress Report</h4>
-                  <span className="text-[10px] md:text-xs text-slate-400 block mt-0.5">15 Apr 2025</span>
-                </div>
+                <button className="text-xs font-bold text-teal-600 hover:text-teal-700">View</button>
               </div>
-              <button className="text-xs font-bold text-teal-600 hover:text-teal-700">Download</button>
-            </div>
-
-            <div className="bg-white rounded-2xl p-4 md:p-5 shadow-[0_2px_10px_rgb(0,0,0,0.03)] border border-slate-50 flex items-center justify-between">
-              <div className="flex items-center gap-3 md:gap-4">
-                <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-slate-50 text-slate-600 flex items-center justify-center shrink-0">
-                  <FileText className="w-4 h-4 md:w-5 md:h-5" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-slate-700 text-xs md:text-sm">Support Priority Summary</h4>
-                  <span className="text-[10px] md:text-xs text-slate-400 block mt-0.5">10 Apr 2025</span>
-                </div>
-              </div>
-              <button className="text-xs font-bold text-slate-500 hover:text-slate-700">View</button>
-            </div>
-
-            <div className="bg-white rounded-2xl p-4 md:p-5 shadow-[0_2px_10px_rgb(0,0,0,0.03)] border border-slate-50 flex items-center justify-between">
-              <div className="flex items-center gap-3 md:gap-4">
-                <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
-                  <FileText className="w-4 h-4 md:w-5 md:h-5" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-slate-700 text-xs md:text-sm">Journey Progress Report</h4>
-                  <span className="text-[10px] md:text-xs text-slate-400 block mt-0.5">01 Apr 2025</span>
-                </div>
-              </div>
-              <button className="text-xs font-bold text-teal-600 hover:text-teal-700">Download</button>
-            </div>
+            ))}
           </div>
         </div>
       </div>

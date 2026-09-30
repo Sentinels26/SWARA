@@ -38,7 +38,7 @@ export default function ProfessionalAppointments() {
 
   useEffect(() => {
     if (user && user.role === 'PROFESSIONAL') {
-      api.get('/cases/').then(res => {
+      api.get('/api/cases/').then(res => {
         setCases(res.data);
         loadAppointments(res.data);
       }).catch(console.error);
@@ -46,7 +46,7 @@ export default function ProfessionalAppointments() {
   }, [user]);
   
   const loadAppointments = (loadedCases: any[]) => {
-    api.get(`/appointments/`).then(res => {
+    api.get(`/api/appointments/`).then(res => {
       const appts = res.data.map((a: any) => {
         const c = loadedCases.find((caseObj: any) => caseObj.id === a.case_id);
         return { ...a, survivor_alias: c ? c.survivor_alias : 'Unknown' };
@@ -64,7 +64,7 @@ export default function ProfessionalAppointments() {
     
     try {
         const scheduled_time = new Date(`${date}T${time}:00`).toISOString();
-        await api.post('/appointments/', {
+        await api.post('/api/appointments/', {
             case_id: parseInt(selectedCaseId),
             scheduled_time,
             title,
@@ -79,7 +79,7 @@ export default function ProfessionalAppointments() {
 
   const updateStatus = async (id: number, status: string) => {
     try {
-        await api.patch(`/appointments/${id}/status?status=${status}`);
+        await api.patch(`/api/appointments/${id}/status?status=${status}`);
         loadAppointments(cases);
     } catch (err) {
         console.error(err);

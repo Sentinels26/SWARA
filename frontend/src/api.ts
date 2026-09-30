@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 // LOCAL:      VITE_API_BASE_URL is not set → defaults to localhost:8001
-// PRODUCTION: VITE_API_BASE_URL=https://your-api.vercel.app (set in Vercel dashboard)
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001';
+// PRODUCTION: Uses relative path ('') to leverage Vercel's rewrites without needing env variables
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? '' : 'http://localhost:8001');
 
 const api = axios.create({
   baseURL: API_BASE_URL,

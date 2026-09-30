@@ -28,12 +28,12 @@ export default function ProfessionalCases() {
 
   useEffect(() => {
     if (user && user.role === 'PROFESSIONAL') {
-      api.get(`/cases/`).then(async res => {
+      api.get(`/api/cases/`).then(async res => {
         const rawCases = res.data;
         const processed = [];
         for (const c of rawCases) {
           try {
-            const cRes = await api.get(`/checkins/${c.id}`);
+            const cRes = await api.get(`/api/checkins/${c.id}`);
             let latest: any = { case_id: c.id, survivor_alias: c.survivor_alias, status: c.status, support_priority: 'STABLE', timestamp: c.created_at, distress_level: 0, sleep_quality: 0, activity_level: 0 };
             if (cRes.data.length > 0) {
               latest = { ...latest, ...cRes.data[0], survivor_alias: c.survivor_alias, status: c.status };
