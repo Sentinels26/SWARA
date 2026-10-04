@@ -37,16 +37,21 @@ interface ChatState {
   initError: string | null;
 }
 
+interface SpeechRecognitionResultLike {
+  isFinal: boolean;
+  [index: number]: {
+    transcript: string;
+  };
+}
+
+interface SpeechRecognitionResultListLike {
+  length: number;
+  [index: number]: SpeechRecognitionResultLike;
+}
+
 interface SpeechRecognitionEventLike {
   resultIndex: number;
-  results: {
-    [index: number]: {
-      isFinal: boolean;
-      [index: number]: {
-        transcript: string;
-      };
-    };
-  };
+  results: SpeechRecognitionResultListLike;
 }
 
 interface SpeechRecognitionErrorEventLike {
@@ -122,14 +127,9 @@ export default function Chat() {
 
     const recognition = new SpeechRecognition();
 
-    // IMPORTANT:
-    // Continuous recognition can frequently produce Chrome's
-    // "network" speech recognition error. A single utterance is
-    // much more reliable for a chat input.
+    // Single utterance is more reliable than continuous recognition.
     recognition.continuous = false;
     recognition.interimResults = true;
-
-    // Better recognition for the user's likely language/environment.
     recognition.lang = 'en-IN';
 
     recognition.onstart = () => {
@@ -163,7 +163,9 @@ export default function Chat() {
       }
     };
 
-    recognition.onerror = (event: SpeechRecognitionErrorEventLike) => {
+    recognition.onerror = (
+      event: SpeechRecognitionErrorEventLike
+    ) => {
       console.error('Speech recognition error:', event.error);
 
       setIsListening(false);
@@ -182,7 +184,9 @@ export default function Chat() {
           break;
 
         case 'no-speech':
-          setSpeechError('No speech was detected. Please try speaking again.');
+          setSpeechError(
+            'No speech was detected. Please try speaking again.'
+          );
           break;
 
         case 'audio-capture':
@@ -198,7 +202,6 @@ export default function Chat() {
           break;
 
         case 'aborted':
-          // Aborted is normally caused by the user stopping recognition.
           break;
 
         default:
@@ -215,6 +218,11 @@ export default function Chat() {
 
     recognition.onend = () => {
       setIsListening(false);
+
+      if (speechTimeoutRef.current) {
+        clearTimeout(speechTimeoutRef.current);
+        speechTimeoutRef.current = null;
+      }
     };
 
     recognitionRef.current = recognition;
@@ -281,7 +289,8 @@ export default function Chat() {
         setChatState((prev) => ({
           ...prev,
           isInitializing: false,
-          initError: 'Could not start chat session. Please refresh.',
+          initError:
+            'Could not start chat session. Please refresh.',
         }));
       }
     };
@@ -412,25 +421,23 @@ export default function Chat() {
       return;
     }
 
-    // Stop current recognition
     if (isListening) {
       try {
         recognition.stop();
       } catch (err) {
-        console.error('Could not stop speech recognition:', err);
+        console.error(
+          'Could not stop speech recognition:',
+          err
+        );
       }
 
       setIsListening(false);
       return;
     }
 
-    // Start recognition
     try {
       recognition.start();
 
-      // Safety timeout.
-      // If the browser never fires onend/onerror, don't leave the
-      // microphone button permanently stuck in listening mode.
       if (speechTimeoutRef.current) {
         clearTimeout(speechTimeoutRef.current);
       }
@@ -445,7 +452,10 @@ export default function Chat() {
         setIsListening(false);
       }, 30000);
     } catch (err: any) {
-      console.error('Could not start speech recognition:', err);
+      console.error(
+        'Could not start speech recognition:',
+        err
+      );
 
       setIsListening(false);
 
@@ -512,10 +522,14 @@ export default function Chat() {
 
         {/* Mobile Header */}
         <header className="md:hidden fixed top-0 left-0 w-full flex items-center justify-between px-4 pb-4 pt-[max(1rem,env(safe-area-inset-top))] bg-white/40 backdrop-blur-xl border-b border-white/60 shrink-0 z-20">
+
           <div className="flex items-center gap-2">
+
             <button
               type="button"
-              onClick={() => navigate('/survivor/dashboard')}
+              onClick={() =>
+                navigate('/survivor/dashboard')
+              }
               className="p-1.5 -ml-1 text-slate-600 hover:text-slate-900 rounded-full hover:bg-white/50 transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -536,16 +550,19 @@ export default function Chat() {
             <ShieldCheck className="w-5 h-5" />
             <MoreHorizontal className="w-5 h-5" />
           </div>
+
         </header>
 
-        {/* Chat Window Container */}
+        {/* Chat Window */}
         <div className="flex-1 bg-white/40 backdrop-blur-xl md:rounded-[2.5rem] md:border md:border-white/60 flex flex-col overflow-hidden relative w-full max-w-5xl mx-auto shadow-[0_8px_32px_rgba(0,0,0,0.05)] h-full">
 
           {/* Chat Header */}
           <div className="px-4 py-3 md:px-8 md:py-5 border-b border-white/60 flex items-center justify-between shrink-0 bg-white/60 backdrop-blur-md relative z-10">
+
             <div className="flex items-center gap-4">
 
               <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-teal-50 to-blue-100 rounded-full border-2 border-white shadow-inner flex items-center justify-center shrink-0 overflow-hidden p-2 relative">
+
                 <div className="absolute inset-0 bg-white/20"></div>
 
                 <img
@@ -553,17 +570,22 @@ export default function Chat() {
                   alt="Assistant"
                   className="w-full h-full object-contain relative z-10"
                 />
+
               </div>
 
               <div>
+
                 <h2 className="text-lg md:text-xl font-bold text-[#1f2937] flex items-center gap-2">
                   SWARA Assistant
                 </h2>
 
                 <div className="text-[11px] md:text-xs font-semibold text-[#4b5563] flex flex-col md:flex-row md:items-center gap-1 md:gap-2">
+
                   <div className="flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                    {isInitializing ? 'Connecting...' : 'Online'}
+                    {isInitializing
+                      ? 'Connecting...'
+                      : 'Online'}
                   </div>
 
                   <span className="hidden md:inline text-slate-300">
@@ -573,11 +595,13 @@ export default function Chat() {
                   <span className="text-slate-500 font-medium">
                     Here to listen, support and guide you.
                   </span>
+
                 </div>
               </div>
             </div>
 
             <div className="hidden md:flex items-center gap-3">
+
               <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white/60 border border-white rounded-full text-xs font-semibold text-[#2c757c]">
                 <ShieldCheck className="w-4 h-4" />
                 Safe &amp; Private
@@ -589,20 +613,20 @@ export default function Chat() {
               >
                 <MoreHorizontal className="w-4 h-4" />
               </button>
+
             </div>
           </div>
 
-          {/* Init Error Banner */}
+          {/* Init Error */}
           {initError && (
             <div className="px-6 py-3 bg-red-50 border-b border-red-100 text-red-600 text-sm font-medium text-center">
               {initError}
             </div>
           )}
 
-          {/* Chat Messages */}
+          {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 md:p-8 flex flex-col gap-6 relative z-10">
 
-            {/* Initializing skeleton */}
             {isInitializing && (
               <div className="flex max-w-[70%] gap-3 mr-auto justify-start">
 
@@ -611,15 +635,18 @@ export default function Chat() {
                 </div>
 
                 <div className="p-5 bg-white/70 backdrop-blur-md border border-white/80 rounded-[1.5rem] rounded-bl-sm flex gap-1.5 items-center h-[52px]">
+
                   <span className="w-2 h-2 bg-[#2c757c]/60 rounded-full animate-bounce"></span>
                   <span className="w-2 h-2 bg-[#2c757c]/60 rounded-full animate-bounce delay-75"></span>
                   <span className="w-2 h-2 bg-[#2c757c]/60 rounded-full animate-bounce delay-150"></span>
+
                 </div>
               </div>
             )}
 
             {messages.map((msg) => {
-              const isUser = msg.sender_role === 'user';
+              const isUser =
+                msg.sender_role === 'user';
 
               return (
                 <div
@@ -631,7 +658,6 @@ export default function Chat() {
                   }`}
                 >
 
-                  {/* Bot Avatar */}
                   {!isUser && (
                     <div className="w-8 h-8 md:w-10 md:h-10 bg-white/80 border border-white/60 rounded-full flex items-center justify-center text-[#2c757c] shrink-0 shadow-sm mt-auto mb-5">
                       <Bot className="w-4 h-4 md:w-5 md:h-5" />
@@ -639,6 +665,7 @@ export default function Chat() {
                   )}
 
                   <div className="flex flex-col gap-1 w-full">
+
                     <div
                       className={`p-4 md:p-5 text-sm md:text-[15px] leading-relaxed shadow-sm border ${
                         isUser
@@ -653,7 +680,9 @@ export default function Chat() {
 
                     <div
                       className={`text-[10px] md:text-[11px] font-semibold text-[#6b7280] ${
-                        isUser ? 'text-right pr-2' : 'pl-2'
+                        isUser
+                          ? 'text-right pr-2'
+                          : 'pl-2'
                       } flex items-center gap-1 ${
                         isUser ? 'justify-end' : ''
                       }`}
@@ -666,9 +695,9 @@ export default function Chat() {
                         </span>
                       )}
                     </div>
+
                   </div>
 
-                  {/* User Avatar */}
                   {isUser && (
                     <div className="w-8 h-8 md:w-10 md:h-10 bg-white/80 border border-white/60 rounded-full flex items-center justify-center text-slate-600 font-bold shrink-0 shadow-sm mt-auto mb-5 text-sm">
                       {user?.full_name
@@ -676,11 +705,11 @@ export default function Chat() {
                         : 'U'}
                     </div>
                   )}
+
                 </div>
               );
             })}
 
-            {/* AI typing indicator */}
             {isSending && (
               <div className="flex max-w-[70%] gap-3 mr-auto justify-start">
 
@@ -689,14 +718,20 @@ export default function Chat() {
                 </div>
 
                 <div className="p-5 bg-white/70 backdrop-blur-md border border-white/80 rounded-[1.5rem] rounded-bl-sm flex gap-1.5 items-center h-[52px]">
+
                   <span className="w-2 h-2 bg-[#2c757c]/60 rounded-full animate-bounce"></span>
                   <span className="w-2 h-2 bg-[#2c757c]/60 rounded-full animate-bounce delay-75"></span>
                   <span className="w-2 h-2 bg-[#2c757c]/60 rounded-full animate-bounce delay-150"></span>
+
                 </div>
               </div>
             )}
 
-            <div ref={messagesEndRef} className="h-4" />
+            <div
+              ref={messagesEndRef}
+              className="h-4"
+            />
+
           </div>
 
           {/* Input Area */}
@@ -727,14 +762,18 @@ export default function Chat() {
                   name="chat-message"
                   type="text"
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
+                  onChange={(e) =>
+                    setInput(e.target.value)
+                  }
                   placeholder={
                     isInitializing
                       ? 'Starting session...'
                       : 'Type a message...'
                   }
                   className="flex-1 bg-transparent border-none text-slate-700 text-sm md:text-[15px] px-2 md:px-4 py-2 md:py-3 focus:outline-none focus:ring-0 w-full placeholder-slate-400 font-medium"
-                  disabled={isSending || isInitializing}
+                  disabled={
+                    isSending || isInitializing
+                  }
                   autoComplete="off"
                 />
 
@@ -763,7 +802,7 @@ export default function Chat() {
                     <Mic className="w-5 h-5" />
                   </button>
 
-                  {/* Send Button */}
+                  {/* Send */}
                   <button
                     type="submit"
                     disabled={!canSend}
@@ -780,6 +819,7 @@ export default function Chat() {
               </div>
             </form>
           </div>
+
         </div>
       </main>
 
@@ -832,6 +872,7 @@ export default function Chat() {
         <div className="space-y-6">
 
           <div className="text-center">
+
             <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-2 drop-shadow-md" />
 
             <h3 className="text-xl font-bold text-slate-900">
@@ -841,6 +882,7 @@ export default function Chat() {
             <p className="text-slate-600 text-sm mt-2">
               Bypass routine monitoring and connect with immediate support networks.
             </p>
+
           </div>
 
           <div className="space-y-3">
@@ -848,7 +890,9 @@ export default function Chat() {
             <button
               type="button"
               onClick={() =>
-                triggerSOS('Emergency Services (112)')
+                triggerSOS(
+                  'Emergency Services (112)'
+                )
               }
               className="w-full flex items-center justify-between p-4 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl transition-colors text-left group"
             >
@@ -873,7 +917,9 @@ export default function Chat() {
 
             <button
               type="button"
-              onClick={() => triggerSOS('Care Team')}
+              onClick={() =>
+                triggerSOS('Care Team')
+              }
               className="w-full flex items-center justify-between p-4 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors text-left group"
             >
               <div className="flex items-center gap-3">
@@ -906,7 +952,9 @@ export default function Chat() {
           <Button
             variant="outline"
             className="w-full border-slate-300"
-            onClick={() => setIsSosOpen(false)}
+            onClick={() =>
+              setIsSosOpen(false)
+            }
           >
             Cancel / Go Back
           </Button>
