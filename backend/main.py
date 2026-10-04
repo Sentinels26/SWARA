@@ -9,7 +9,7 @@ import logging
 import models
 import schemas
 import auth
-from database import engine, get_db, SessionLocal
+from database import engine, get_db, SessionLocal, Base
 import llm_provider
 import os
 import json
@@ -26,6 +26,9 @@ logging.basicConfig(
 
 app = FastAPI(title="SWARA API - Secure Foundation")
 api_router = APIRouter(prefix="/api")
+
+# Automatically create database tables if they do not exist.
+Base.metadata.create_all(bind=engine)
 
 # ── CORS ─────────────────────────────────────────────────────────────────────
 # In production set CORS_ORIGINS to your Vercel frontend URL, e.g.:
