@@ -74,7 +74,7 @@ export default function CheckIn() {
       else if (mappedDistress > 6 || mappedSleep < 5) priority = 'ELEVATED';
       else if (mappedActivity < 3) priority = 'OBSERVE';
 
-      await api.post(`/checkins/`, {
+      await api.post(`/api/checkins/`, {
         distress_level: mappedDistress,
         sleep_quality: mappedSleep,
         activity_level: mappedActivity,
