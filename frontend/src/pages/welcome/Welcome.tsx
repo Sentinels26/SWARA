@@ -5,7 +5,6 @@ import { User, Stethoscope, ArrowRight } from 'lucide-react';
 import Snowfall from '../../components/Snowfall';
 
 const languages = [
-  'SWARA',
   'स्वारा',
   'স্বরা',
   'સ્વરા',
