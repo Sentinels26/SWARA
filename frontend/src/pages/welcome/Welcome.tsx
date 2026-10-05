@@ -5,8 +5,17 @@ import { User, Stethoscope, ArrowRight } from 'lucide-react';
 import Snowfall from '../../components/Snowfall';
 
 const languages = [
-  'English', 'हिंदी', 'বাংলা', 'ગુજરાતી', 'ಕನ್ನಡ', 
-  'മലയാളം', 'मराठी', 'ଓଡ଼ିଆ', 'ਪੰਜਾਬੀ', 'தமிழ்', 'తెలుగు', 'اردو'
+  'SWARA',
+  'स्वारा',
+  'স্বরা',
+  'સ્વરા',
+  'ಸ್ವರಾ',
+  'സ്വരാ',
+  'ସ୍ୱରା',
+  'ਸਵਰਾ',
+  'ஸ்வரா',
+  'స్వరా',
+  'سوارا',
 ];
 
 // Helper component for 3D Tilt Card
